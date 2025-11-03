@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Future enhancements will be listed here
 
-## [1.0.0] - 2024-11-04
+## [1.0.0] - 2025-11-04
 
 ### Added
 - Initial stable release of tf-safe
