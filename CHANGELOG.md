@@ -8,7 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial release of tf-safe
+- Future enhancements will be listed here
+
+## [1.0.0] - 2024-11-04
+
+### Added
+- Initial stable release of tf-safe
 - Automated Terraform state backup functionality
 - Local filesystem storage backend
 - AWS S3 remote storage backend
@@ -24,20 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive documentation
 - Example configurations and workflows
 - CI/CD pipeline examples (GitHub Actions, GitLab CI, Azure DevOps)
+- Package distribution (Homebrew, Chocolatey, DEB)
 
 ### Security
 - Encryption at rest for all backups
 - Secure key management
 - Checksum verification for backup integrity
-
-## [1.0.0] - TBD
-
-### Added
-- Initial stable release
-- All core functionality implemented
-- Production-ready features
-- Complete documentation
-- Package distribution (Homebrew, Chocolatey, DEB)
 
 ---
 
