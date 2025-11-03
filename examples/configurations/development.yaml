@@ -1,0 +1,38 @@
+# Development Environment Configuration
+#
+# Optimized for development workflows with faster operations,
+# minimal retention, and detailed logging for troubleshooting.
+# Encryption is disabled for simplicity.
+
+local:
+  enabled: true
+  path: ".tf-backups"
+  retention_count: 3
+
+remote:
+  enabled: false
+
+encryption:
+  provider: none
+
+retention:
+  local_count: 3
+  max_age_days: 7
+  min_count: 3
+
+terraform:
+  auto_backup: true
+  backup_on_plan: false  # Skip plan backups in development
+  backup_on_apply: true
+  backup_on_destroy: true
+  timeout: "15m"
+
+logging:
+  level: debug
+  format: text
+
+verification:
+  verify_on_restore: false  # Skip verification for speed
+
+performance:
+  retry_attempts: 1  # Fail fast in development

@@ -1,0 +1,31 @@
+# tf-safe configuration for simple AWS project
+# This demonstrates a basic setup suitable for development and testing
+
+local:
+  enabled: true
+  path: ".tfstate_snapshots"
+  retention_count: 10
+
+remote:
+  provider: s3
+  bucket: "my-terraform-backups"  # Change this to your bucket
+  region: "us-west-2"
+  prefix: "simple-aws-demo/"
+  enabled: false  # Enable this when you have an S3 bucket configured
+
+encryption:
+  provider: aes
+
+retention:
+  local_count: 10
+  max_age_days: 30
+
+terraform:
+  auto_backup: true
+  backup_on_plan: true
+  backup_on_apply: true
+  backup_on_destroy: true
+
+logging:
+  level: info
+  format: text

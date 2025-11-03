@@ -1,0 +1,174 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+    
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    
+    - name: Install dependencies
+      run: go mod download
+    
+    - name: Set build variables
+      id: vars
+      run: |
+        echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        echo "build_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+        echo "git_commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+    
+    - name: Build all platforms
+      env:
+        VERSION: ${{ steps.vars.outputs.version }}
+        BUILD_TIME: ${{ steps.vars.outputs.build_time }}
+        GIT_COMMIT: ${{ steps.vars.outputs.git_commit }}
+      run: |
+        mkdir -p dist
+        
+        # Build matrix
+        platforms="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64"
+        
+        for platform in $platforms; do
+          GOOS=$(echo $platform | cut -d'/' -f1)
+          GOARCH=$(echo $platform | cut -d'/' -f2)
+          
+          output_name="tf-safe-${GOOS}-${GOARCH}"
+          if [ "$GOOS" = "windows" ]; then
+            output_name="${output_name}.exe"
+          fi
+          
+          echo "Building $output_name..."
+          
+          GOOS=$GOOS GOARCH=$GOARCH go build \
+            -ldflags "-s -w -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${GIT_COMMIT}" \
+            -o "dist/${output_name}" \
+            .
+          
+          if [ $? -ne 0 ]; then
+            echo "Failed to build $output_name"
+            exit 1
+          fi
+        done
+    
+    - name: Check binary sizes
+      run: |
+        echo "Checking binary sizes..."
+        for file in dist/*; do
+          size=$(stat -c%s "$file")
+          size_mb=$(echo "scale=2; $size/1024/1024" | bc -l)
+          echo "$file: ${size_mb}MB"
+          if [ $size -gt 15728640 ]; then
+            echo "WARNING: $file exceeds 15MB size limit"
+          fi
+        done
+    
+    - name: Create release packages
+      run: |
+        cd dist
+        
+        # Create archives for each binary
+        for file in tf-safe-*; do
+          if [[ $file == *.exe ]]; then
+            # Windows binary - create zip
+            zip "${file%.exe}.zip" "$file"
+            echo "Created ${file%.exe}.zip"
+          else
+            # Unix binary - create tar.gz
+            tar -czf "${file}.tar.gz" "$file"
+            echo "Created ${file}.tar.gz"
+          fi
+        done
+        
+        # Create checksums
+        sha256sum *.zip *.tar.gz > checksums.txt
+        echo "Created checksums.txt"
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # Get the tag message or generate release notes from commits
+        if git tag -l --format='%(contents)' ${{ steps.vars.outputs.version }} | grep -q .; then
+          # Use tag message if it exists
+          git tag -l --format='%(contents)' ${{ steps.vars.outputs.version }} > release_notes.md
+        else
+          # Generate from commits since last tag
+          echo "## Changes" > release_notes.md
+          echo "" >> release_notes.md
+          
+          # Get previous tag
+          prev_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -n "$prev_tag" ]; then
+            echo "Changes since $prev_tag:" >> release_notes.md
+            echo "" >> release_notes.md
+            git log --pretty=format:"- %s" $prev_tag..HEAD >> release_notes.md
+          else
+            echo "Initial release" >> release_notes.md
+          fi
+        fi
+        
+        echo "" >> release_notes.md
+        echo "## Binary Downloads" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "| Platform | Architecture | Download |" >> release_notes.md
+        echo "|----------|--------------|----------|" >> release_notes.md
+        echo "| Linux | amd64 | [tf-safe-linux-amd64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.version }}/tf-safe-linux-amd64.tar.gz) |" >> release_notes.md
+        echo "| Linux | arm64 | [tf-safe-linux-arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.version }}/tf-safe-linux-arm64.tar.gz) |" >> release_notes.md
+        echo "| macOS | amd64 | [tf-safe-darwin-amd64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.version }}/tf-safe-darwin-amd64.tar.gz) |" >> release_notes.md
+        echo "| macOS | arm64 | [tf-safe-darwin-arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.version }}/tf-safe-darwin-arm64.tar.gz) |" >> release_notes.md
+        echo "| Windows | amd64 | [tf-safe-windows-amd64.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.version }}/tf-safe-windows-amd64.zip) |" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "## Installation" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### macOS (Homebrew)" >> release_notes.md
+        echo '```bash' >> release_notes.md
+        echo "brew install tf-safe" >> release_notes.md
+        echo '```' >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Manual Installation" >> release_notes.md
+        echo "1. Download the appropriate binary for your platform" >> release_notes.md
+        echo "2. Extract the archive" >> release_notes.md
+        echo "3. Move the binary to a directory in your PATH" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### Verify Installation" >> release_notes.md
+        echo '```bash' >> release_notes.md
+        echo "tf-safe --version" >> release_notes.md
+        echo '```' >> release_notes.md
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.vars.outputs.version }}
+        name: Release ${{ steps.vars.outputs.version }}
+        body_path: release_notes.md
+        files: |
+          dist/*.tar.gz
+          dist/*.zip
+          dist/checksums.txt
+        draft: false
+        prerelease: ${{ contains(steps.vars.outputs.version, '-') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

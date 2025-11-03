@@ -1,0 +1,56 @@
+# Production Configuration with S3 and KMS
+#
+# This configuration is designed for production environments
+# with enterprise-grade security and reliability requirements.
+# Features dual storage (local + S3), KMS encryption, and
+# comprehensive retention policies.
+
+local:
+  enabled: true
+  path: ".tfstate_snapshots"
+  retention_count: 10
+
+remote:
+  provider: s3
+  bucket: "prod-terraform-backups"
+  region: "us-east-1"
+  prefix: "infrastructure/"
+  enabled: true
+  s3:
+    server_side_encryption: "aws:kms"
+    sse_kms_key_id: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+
+encryption:
+  provider: kms
+  kms_key_id: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+
+retention:
+  local_count: 10
+  remote_count: 100
+  max_age_days: 365
+  min_count: 5
+
+terraform:
+  auto_backup: true
+  backup_on_plan: true
+  backup_on_apply: true
+  backup_on_destroy: true
+  timeout: "45m"
+
+logging:
+  level: info
+  format: json
+  file: "/var/log/tf-safe.log"
+  max_size: 100
+  max_backups: 5
+
+verification:
+  checksum_algorithm: "sha256"
+  verify_on_restore: true
+  verify_on_upload: true
+
+performance:
+  concurrent_uploads: 3
+  chunk_size: "64MB"
+  retry_attempts: 5
+  retry_delay: "10s"

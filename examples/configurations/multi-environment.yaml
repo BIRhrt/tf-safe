@@ -1,0 +1,61 @@
+# Multi-Environment Configuration
+#
+# Configuration for organizations managing multiple environments
+# (dev, staging, prod) with environment-specific settings and
+# centralized backup storage with proper isolation.
+
+local:
+  enabled: true
+  path: ".tfstate_snapshots"
+  retention_count: 8
+
+remote:
+  provider: s3
+  bucket: "company-terraform-backups"
+  region: "us-east-1"
+  prefix: "${ENVIRONMENT}/${PROJECT}/"  # Environment and project isolation
+  enabled: true
+  s3:
+    server_side_encryption: "aws:kms"
+    sse_kms_key_id: "${ENVIRONMENT_KMS_KEY}"  # Environment-specific KMS key
+
+encryption:
+  provider: kms
+  kms_key_id: "${ENVIRONMENT_KMS_KEY}"
+
+retention:
+  local_count: 8
+  remote_count: 200  # Higher retention for compliance
+  max_age_days: 730  # 2 years retention
+  min_count: 10
+
+terraform:
+  auto_backup: true
+  backup_on_plan: true
+  backup_on_apply: true
+  backup_on_destroy: true
+  timeout: "60m"  # Longer timeout for large infrastructures
+
+logging:
+  level: info
+  format: json
+  file: "/var/log/tf-safe-${ENVIRONMENT}.log"
+  max_size: 200
+  max_backups: 10
+
+verification:
+  checksum_algorithm: "sha256"
+  verify_on_restore: true
+  verify_on_upload: true
+
+performance:
+  concurrent_uploads: 4
+  chunk_size: "64MB"
+  retry_attempts: 5
+  retry_delay: "10s"
+
+# Environment-specific overrides can be set via environment variables:
+# - ENVIRONMENT (dev, staging, prod)
+# - PROJECT (project name)
+# - ENVIRONMENT_KMS_KEY (environment-specific KMS key)
+# - TF_SAFE_RETENTION_REMOTE_COUNT (override retention per environment)

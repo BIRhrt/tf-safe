@@ -1,0 +1,395 @@
+# Azure DevOps Pipeline for Terraform with tf-safe
+#
+# This pipeline demonstrates how to integrate tf-safe into Azure DevOps
+# for automated Terraform deployments with state protection.
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - README.md
+      - docs/*
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+      - docs/*
+
+variables:
+  - name: TF_VERSION
+    value: '1.6.0'
+  - name: TF_SAFE_VERSION
+    value: 'latest'
+  - name: AWS_REGION
+    value: 'us-west-2'
+
+stages:
+  - stage: Validate
+    displayName: 'Validate Terraform'
+    jobs:
+      - job: ValidateJob
+        displayName: 'Validate and Plan'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: TerraformInstaller@0
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: $(TF_VERSION)
+
+          - script: |
+              curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+              tf-safe --version
+            displayName: 'Install tf-safe'
+
+          - script: |
+              cat > .tf-safe.yaml << EOF
+              local:
+                enabled: false
+              
+              remote:
+                provider: s3
+                bucket: "$(TF_BACKUP_BUCKET)"
+                region: "$(AWS_REGION)"
+                prefix: "$(Build.Repository.Name)/$(Build.SourceBranchName)/"
+                enabled: true
+              
+              encryption:
+                provider: kms
+                kms_key_id: "$(KMS_KEY_ID)"
+              
+              retention:
+                remote_count: 30
+                max_age_days: 60
+              
+              terraform:
+                backup_on_plan: false
+              
+              logging:
+                level: info
+                format: json
+              EOF
+            displayName: 'Configure tf-safe'
+            env:
+              TF_BACKUP_BUCKET: $(TF_BACKUP_BUCKET)
+              KMS_KEY_ID: $(KMS_KEY_ID)
+
+          - script: |
+              tf-safe init
+            displayName: 'Terraform Init'
+            env:
+              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+          - script: |
+              terraform validate
+            displayName: 'Terraform Validate'
+
+          - script: |
+              tf-safe plan -no-color | tee plan.txt
+            displayName: 'Terraform Plan'
+            env:
+              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Plan'
+            inputs:
+              pathToPublish: 'plan.txt'
+              artifactName: 'terraform-plan'
+
+  - stage: Deploy_Dev
+    displayName: 'Deploy to Development'
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: DeployDev
+        displayName: 'Deploy to Development'
+        environment: 'development'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: TerraformInstaller@0
+                  displayName: 'Install Terraform'
+                  inputs:
+                    terraformVersion: $(TF_VERSION)
+
+                - script: |
+                    curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+                  displayName: 'Install tf-safe'
+
+                - script: |
+                    cat > .tf-safe.yaml << EOF
+                    local:
+                      enabled: false
+                    
+                    remote:
+                      provider: s3
+                      bucket: "$(TF_BACKUP_BUCKET)"
+                      region: "$(AWS_REGION)"
+                      prefix: "$(Build.Repository.Name)/development/"
+                      enabled: true
+                      s3:
+                        server_side_encryption: "aws:kms"
+                        sse_kms_key_id: "$(KMS_KEY_ID)"
+                    
+                    encryption:
+                      provider: kms
+                      kms_key_id: "$(KMS_KEY_ID)"
+                    
+                    retention:
+                      remote_count: 20
+                      max_age_days: 30
+                    
+                    terraform:
+                      auto_backup: true
+                      timeout: "30m"
+                    
+                    logging:
+                      level: info
+                      format: json
+                    
+                    performance:
+                      concurrent_uploads: 3
+                      retry_attempts: 3
+                    EOF
+                  displayName: 'Configure tf-safe for Development'
+
+                - script: |
+                    tf-safe init
+                  displayName: 'Terraform Init'
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+                - script: |
+                    tf-safe apply -auto-approve -no-color
+                  displayName: 'Terraform Apply'
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+                - script: |
+                    echo "Recent backups:"
+                    tf-safe list --limit 3
+                  displayName: 'Show Recent Backups'
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+  - stage: Deploy_Prod
+    displayName: 'Deploy to Production'
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProd
+        displayName: 'Deploy to Production'
+        environment: 'production'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: TerraformInstaller@0
+                  displayName: 'Install Terraform'
+                  inputs:
+                    terraformVersion: $(TF_VERSION)
+
+                - script: |
+                    curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+                  displayName: 'Install tf-safe'
+
+                - script: |
+                    cat > .tf-safe.yaml << EOF
+                    local:
+                      enabled: false
+                    
+                    remote:
+                      provider: s3
+                      bucket: "$(TF_BACKUP_BUCKET)"
+                      region: "$(AWS_REGION)"
+                      prefix: "$(Build.Repository.Name)/production/"
+                      enabled: true
+                      s3:
+                        server_side_encryption: "aws:kms"
+                        sse_kms_key_id: "$(KMS_KEY_ID)"
+                    
+                    encryption:
+                      provider: kms
+                      kms_key_id: "$(KMS_KEY_ID)"
+                    
+                    retention:
+                      remote_count: 100
+                      max_age_days: 365
+                      min_count: 10
+                    
+                    terraform:
+                      auto_backup: true
+                      backup_on_apply: true
+                      timeout: "60m"
+                    
+                    logging:
+                      level: info
+                      format: json
+                    
+                    verification:
+                      verify_on_restore: true
+                      verify_on_upload: true
+                    
+                    performance:
+                      concurrent_uploads: 5
+                      retry_attempts: 10
+                      retry_delay: "10s"
+                    EOF
+                  displayName: 'Configure tf-safe for Production'
+
+                - script: |
+                    tf-safe backup --message "Pre-production-deploy backup - $(Build.BuildNumber)"
+                  displayName: 'Create Pre-Deploy Backup'
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+                - script: |
+                    tf-safe init
+                  displayName: 'Terraform Init'
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+                - script: |
+                    tf-safe plan -no-color
+                  displayName: 'Terraform Plan'
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+                - script: |
+                    tf-safe apply -auto-approve -no-color
+                  displayName: 'Terraform Apply'
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+                - script: |
+                    echo "✅ Production deployment successful"
+                    echo "📊 Recent backups:"
+                    tf-safe list --limit 5
+                  displayName: 'Show Deployment Status'
+                  condition: succeeded()
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+                - script: |
+                    echo "❌ Production deployment failed"
+                    echo "🔄 Available backups for rollback:"
+                    tf-safe list --limit 10
+                    echo "To rollback, use the restore pipeline with a backup ID"
+                  displayName: 'Show Failure Status'
+                  condition: failed()
+                  env:
+                    AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+                    AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+# Separate pipeline for emergency restore operations
+# This would typically be in a separate YAML file: restore-pipeline.yml
+---
+# Emergency Restore Pipeline
+trigger: none
+pr: none
+
+parameters:
+  - name: environment
+    displayName: 'Environment to restore'
+    type: string
+    default: 'development'
+    values:
+      - development
+      - production
+  - name: backupId
+    displayName: 'Backup ID to restore'
+    type: string
+    default: ''
+
+variables:
+  - name: TF_VERSION
+    value: '1.6.0'
+  - name: AWS_REGION
+    value: 'us-west-2'
+
+stages:
+  - stage: Restore
+    displayName: 'Emergency Restore'
+    jobs:
+      - job: RestoreJob
+        displayName: 'Restore from Backup'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: TerraformInstaller@0
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: $(TF_VERSION)
+
+          - script: |
+              curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+            displayName: 'Install tf-safe'
+
+          - script: |
+              cat > .tf-safe.yaml << EOF
+              remote:
+                provider: s3
+                bucket: "$(TF_BACKUP_BUCKET)"
+                region: "$(AWS_REGION)"
+                prefix: "$(Build.Repository.Name)/${{ parameters.environment }}/"
+                enabled: true
+              
+              encryption:
+                provider: kms
+                kms_key_id: "$(KMS_KEY_ID)"
+              EOF
+            displayName: 'Configure tf-safe'
+
+          - script: |
+              tf-safe init
+            displayName: 'Initialize tf-safe'
+            env:
+              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+          - script: |
+              echo "Available backups for ${{ parameters.environment }}:"
+              tf-safe list
+            displayName: 'List Available Backups'
+            env:
+              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+          - script: |
+              if [ -n "${{ parameters.backupId }}" ]; then
+                echo "Restoring backup: ${{ parameters.backupId }}"
+                tf-safe restore "${{ parameters.backupId }}" --force
+                echo "✅ Restore completed"
+                echo "Verifying state..."
+                terraform plan -no-color
+              else
+                echo "❌ ERROR: Backup ID not specified"
+                echo "Please specify a backup ID from the list above"
+                exit 1
+              fi
+            displayName: 'Restore Backup'
+            env:
+              AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+              AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)

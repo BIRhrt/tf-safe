@@ -1,0 +1,330 @@
+# GitLab CI/CD Pipeline for Terraform with tf-safe
+#
+# This pipeline demonstrates how to integrate tf-safe into GitLab CI/CD
+# for automated Terraform deployments with comprehensive state protection.
+
+stages:
+  - validate
+  - plan
+  - apply
+  - destroy
+
+variables:
+  TF_VERSION: "1.6.0"
+  TF_SAFE_VERSION: "latest"
+  AWS_DEFAULT_REGION: "us-west-2"
+  TF_ROOT: ${CI_PROJECT_DIR}
+  TF_STATE_NAME: ${CI_PROJECT_NAME}
+
+# Cache Terraform plugins and tf-safe binary
+cache:
+  key: "${TF_VERSION}-${TF_SAFE_VERSION}"
+  paths:
+    - .terraform/
+    - tf-safe
+
+# Install dependencies
+.install_dependencies: &install_dependencies
+  - |
+    # Install Terraform
+    wget -O terraform.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+    unzip terraform.zip
+    chmod +x terraform
+    mv terraform /usr/local/bin/
+    
+    # Install tf-safe
+    if [ ! -f tf-safe ]; then
+      curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+      cp /usr/local/bin/tf-safe ./tf-safe
+    fi
+    chmod +x tf-safe
+    ./tf-safe --version
+
+# Configure tf-safe based on environment
+.configure_tf_safe: &configure_tf_safe
+  - |
+    cat > .tf-safe.yaml << EOF
+    local:
+      enabled: false
+    
+    remote:
+      provider: s3
+      bucket: "${TF_BACKUP_BUCKET}"
+      region: "${AWS_DEFAULT_REGION}"
+      prefix: "${CI_PROJECT_NAME}/${CI_ENVIRONMENT_NAME}/"
+      enabled: true
+      s3:
+        server_side_encryption: "aws:kms"
+        sse_kms_key_id: "${KMS_KEY_ID}"
+    
+    encryption:
+      provider: kms
+      kms_key_id: "${KMS_KEY_ID}"
+    
+    retention:
+      remote_count: 50
+      max_age_days: 90
+      min_count: 5
+    
+    terraform:
+      auto_backup: true
+      timeout: "30m"
+    
+    logging:
+      level: info
+      format: json
+    
+    verification:
+      verify_on_restore: true
+      verify_on_upload: true
+    
+    performance:
+      concurrent_uploads: 3
+      retry_attempts: 5
+      retry_delay: "5s"
+    EOF
+
+validate:
+  stage: validate
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - *configure_tf_safe
+  script:
+    - ./tf-safe init
+    - terraform validate
+    - terraform fmt -check
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+plan:
+  stage: plan
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - *configure_tf_safe
+  script:
+    - ./tf-safe init
+    - ./tf-safe plan -no-color | tee plan.txt
+  artifacts:
+    reports:
+      terraform: plan.txt
+    paths:
+      - plan.txt
+    expire_in: 1 week
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Development environment
+apply:dev:
+  stage: apply
+  image: alpine:latest
+  environment:
+    name: development
+    url: https://dev.example.com
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - export CI_ENVIRONMENT_NAME=development
+    - *configure_tf_safe
+  script:
+    - ./tf-safe init
+    - ./tf-safe apply -auto-approve -no-color
+    - ./tf-safe list --limit 3
+  after_script:
+    - |
+      if [ $CI_JOB_STATUS == "failed" ]; then
+        echo "Apply failed. Recent backups:"
+        ./tf-safe list --limit 5
+        echo "To restore, run: tf-safe restore <backup-id>"
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+  when: manual
+
+# Staging environment
+apply:staging:
+  stage: apply
+  image: alpine:latest
+  environment:
+    name: staging
+    url: https://staging.example.com
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - export CI_ENVIRONMENT_NAME=staging
+    - *configure_tf_safe
+  script:
+    - ./tf-safe init
+    - ./tf-safe plan -no-color
+    - ./tf-safe apply -auto-approve -no-color
+    - ./tf-safe list --limit 3
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: manual
+
+# Production environment
+apply:prod:
+  stage: apply
+  image: alpine:latest
+  environment:
+    name: production
+    url: https://example.com
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - export CI_ENVIRONMENT_NAME=production
+    - |
+      # Enhanced configuration for production
+      cat > .tf-safe.yaml << EOF
+      local:
+        enabled: false
+      
+      remote:
+        provider: s3
+        bucket: "${TF_BACKUP_BUCKET}"
+        region: "${AWS_DEFAULT_REGION}"
+        prefix: "${CI_PROJECT_NAME}/production/"
+        enabled: true
+        s3:
+          server_side_encryption: "aws:kms"
+          sse_kms_key_id: "${KMS_KEY_ID}"
+      
+      encryption:
+        provider: kms
+        kms_key_id: "${KMS_KEY_ID}"
+      
+      retention:
+        remote_count: 200
+        max_age_days: 730  # 2 years for production
+        min_count: 20
+      
+      terraform:
+        auto_backup: true
+        backup_on_apply: true
+        timeout: "60m"
+      
+      logging:
+        level: info
+        format: json
+      
+      verification:
+        verify_on_restore: true
+        verify_on_upload: true
+      
+      performance:
+        concurrent_uploads: 5
+        retry_attempts: 10
+        retry_delay: "10s"
+      EOF
+  script:
+    - ./tf-safe backup --message "Pre-production-deploy backup"
+    - ./tf-safe init
+    - ./tf-safe plan -no-color
+    - ./tf-safe apply -auto-approve -no-color
+    - ./tf-safe list --limit 5
+  after_script:
+    - |
+      if [ $CI_JOB_STATUS == "success" ]; then
+        echo "✅ Production deployment successful"
+        echo "📊 Recent backups:"
+        ./tf-safe list --limit 3
+      else
+        echo "❌ Production deployment failed"
+        echo "🔄 Available backups for rollback:"
+        ./tf-safe list --limit 10
+        echo "To rollback: tf-safe restore <backup-id>"
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: manual
+  allow_failure: false
+
+# Destroy environments (manual trigger only)
+destroy:dev:
+  stage: destroy
+  image: alpine:latest
+  environment:
+    name: development
+    action: stop
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - export CI_ENVIRONMENT_NAME=development
+    - *configure_tf_safe
+  script:
+    - ./tf-safe init
+    - ./tf-safe backup --message "Pre-destroy backup - manual trigger"
+    - ./tf-safe destroy -auto-approve
+    - echo "Environment destroyed. Backup available for restoration."
+    - ./tf-safe list --limit 1
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+  when: manual
+
+destroy:staging:
+  stage: destroy
+  image: alpine:latest
+  environment:
+    name: staging
+    action: stop
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - export CI_ENVIRONMENT_NAME=staging
+    - *configure_tf_safe
+  script:
+    - ./tf-safe init
+    - ./tf-safe backup --message "Pre-destroy backup - manual trigger"
+    - ./tf-safe destroy -auto-approve
+    - ./tf-safe list --limit 1
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: manual
+
+# Emergency restore job
+restore:
+  stage: apply
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - *configure_tf_safe
+  script:
+    - ./tf-safe init
+    - echo "Available backups:"
+    - ./tf-safe list
+    - |
+      if [ -n "$BACKUP_ID" ]; then
+        echo "Restoring backup: $BACKUP_ID"
+        ./tf-safe restore "$BACKUP_ID" --force
+        echo "Restore completed. Verifying state..."
+        terraform plan -no-color
+      else
+        echo "ERROR: BACKUP_ID variable not set"
+        echo "Set BACKUP_ID variable and re-run this job"
+        exit 1
+      fi
+  rules:
+    - if: '$RESTORE_BACKUP == "true"'
+  when: manual
+
+# Backup cleanup job (scheduled)
+cleanup:
+  stage: validate
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl unzip wget
+    - *install_dependencies
+    - *configure_tf_safe
+  script:
+    - echo "Current backup count:"
+    - ./tf-safe list | wc -l
+    - echo "Retention policy will be applied automatically"
+    - echo "Manual cleanup not required with tf-safe"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'

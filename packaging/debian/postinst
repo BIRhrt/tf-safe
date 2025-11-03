@@ -1,0 +1,18 @@
+#!/bin/bash
+# Post-installation script for tf-safe
+
+set -e
+
+# Create symlink if it doesn't exist
+if [ ! -L /usr/bin/tf-safe ]; then
+    ln -sf /usr/local/bin/tf-safe /usr/bin/tf-safe
+fi
+
+# Set proper permissions
+chmod 755 /usr/local/bin/tf-safe
+
+echo "tf-safe installed successfully!"
+echo "Run 'tf-safe --help' to get started."
+echo "Initialize a project with 'tf-safe init'."
+
+exit 0

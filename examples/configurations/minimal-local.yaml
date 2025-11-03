@@ -1,0 +1,25 @@
+# Minimal Local-Only Configuration
+# 
+# This configuration provides basic local backup functionality
+# with minimal setup. Perfect for individual developers or
+# small projects that don't need remote storage.
+
+local:
+  enabled: true
+  path: ".tfstate_snapshots"
+  retention_count: 5
+
+encryption:
+  provider: aes
+
+retention:
+  local_count: 5
+  max_age_days: 30
+
+logging:
+  level: info
+  format: text
+
+terraform:
+  auto_backup: true
+  backup_on_plan: false  # Skip backups for plan operations to save space

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>tf-safe</id>
+    <version>1.0.0</version>
+    <packageSourceUrl>https://github.com/your-org/tf-safe</packageSourceUrl>
+    <owners>tf-safe Team</owners>
+    <title>tf-safe</title>
+    <authors>tf-safe Team</authors>
+    <projectUrl>https://github.com/your-org/tf-safe</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/your-org/tf-safe/main/assets/icon.png</iconUrl>
+    <copyright>Copyright (c) 2024 tf-safe Team</copyright>
+    <licenseUrl>https://github.com/your-org/tf-safe/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/your-org/tf-safe</projectSourceUrl>
+    <docsUrl>https://github.com/your-org/tf-safe/blob/main/README.md</docsUrl>
+    <bugTrackerUrl>https://github.com/your-org/tf-safe/issues</bugTrackerUrl>
+    <tags>terraform state backup cli devops infrastructure</tags>
+    <summary>Terraform state file protection and backup tool</summary>
+    <description>
+tf-safe is a lightweight CLI tool that provides comprehensive Terraform state file protection through automated backup, encryption, versioning, and restoration capabilities.
+
+## Features
+
+* **Automated Backups**: Automatic state backups before and after Terraform operations
+* **Multiple Storage Backends**: Support for local filesystem and AWS S3 storage
+* **Encryption**: AES-256-GCM and AWS KMS encryption support
+* **Retention Policies**: Configurable backup retention to manage storage usage
+* **Cross-Platform**: Works on Windows, macOS, and Linux
+* **Seamless Integration**: Drop-in replacement for Terraform commands
+
+## Usage
+
+Initialize tf-safe in your Terraform project:
+```
+tf-safe init
+```
+
+Use as a wrapper for Terraform commands:
+```
+tf-safe apply
+tf-safe plan
+tf-safe destroy
+```
+
+Manual backup and restore operations:
+```
+tf-safe backup
+tf-safe list
+tf-safe restore &lt;backup-id&gt;
+```
+
+## Requirements
+
+* Windows 10 or later
+* Terraform (recommended)
+    </description>
+    <releaseNotes>https://github.com/your-org/tf-safe/releases/tag/v1.0.0</releaseNotes>
+    <dependencies>
+      <dependency id="terraform" version="0.12.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

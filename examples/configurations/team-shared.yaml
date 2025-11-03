@@ -1,0 +1,48 @@
+# Team Shared Configuration
+#
+# Configuration for teams sharing Terraform state with
+# centralized backup storage and moderate security.
+# Uses S3 for shared access and AES encryption.
+
+local:
+  enabled: true
+  path: ".tfstate_snapshots"
+  retention_count: 5
+
+remote:
+  provider: s3
+  bucket: "team-terraform-backups"
+  region: "us-west-2"
+  prefix: "${PROJECT_NAME}/"  # Use environment variable for project isolation
+  enabled: true
+  s3:
+    server_side_encryption: "AES256"
+
+encryption:
+  provider: aes
+  aes:
+    key_file: "/shared/secure/tf-safe-team.key"  # Shared team key
+
+retention:
+  local_count: 5
+  remote_count: 50
+  max_age_days: 90
+  min_count: 3
+
+terraform:
+  auto_backup: true
+  backup_on_plan: true
+  backup_on_apply: true
+  backup_on_destroy: true
+
+logging:
+  level: info
+  format: json
+
+verification:
+  verify_on_restore: true
+  verify_on_upload: true
+
+performance:
+  concurrent_uploads: 2
+  retry_attempts: 3

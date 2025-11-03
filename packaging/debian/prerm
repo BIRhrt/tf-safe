@@ -1,0 +1,11 @@
+#!/bin/bash
+# Pre-removal script for tf-safe
+
+set -e
+
+# Remove symlink if it exists
+if [ -L /usr/bin/tf-safe ]; then
+    rm -f /usr/bin/tf-safe
+fi
+
+exit 0

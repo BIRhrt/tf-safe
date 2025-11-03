@@ -1,0 +1,48 @@
+# CI/CD Pipeline Configuration
+#
+# Optimized for automated CI/CD environments with
+# remote-only storage, KMS encryption, and structured
+# logging for pipeline integration.
+
+local:
+  enabled: false  # No local storage in CI/CD
+
+remote:
+  provider: s3
+  bucket: "ci-terraform-backups"
+  region: "us-west-2"
+  prefix: "${CI_PROJECT_NAME}/${CI_ENVIRONMENT_NAME}/"
+  enabled: true
+  s3:
+    server_side_encryption: "aws:kms"
+    sse_kms_key_id: "${KMS_KEY_ID}"  # From environment variable
+
+encryption:
+  provider: kms
+  kms_key_id: "${KMS_KEY_ID}"
+
+retention:
+  remote_count: 50
+  max_age_days: 90
+  min_count: 5
+
+terraform:
+  auto_backup: true
+  backup_on_plan: false  # Plans don't modify state
+  backup_on_apply: true
+  backup_on_destroy: true
+  timeout: "30m"
+
+logging:
+  level: info
+  format: json  # Structured logging for CI/CD
+
+verification:
+  verify_on_restore: true
+  verify_on_upload: true
+
+performance:
+  concurrent_uploads: 5  # Faster uploads in CI/CD
+  chunk_size: "128MB"
+  retry_attempts: 5
+  retry_delay: "5s"

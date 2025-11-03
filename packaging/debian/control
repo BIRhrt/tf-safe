@@ -1,0 +1,24 @@
+Package: tf-safe
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: libc6 (>= 2.17)
+Recommends: terraform
+Maintainer: tf-safe Team <maintainers@tf-safe.dev>
+Description: Terraform state file protection and backup tool
+ tf-safe is a lightweight CLI tool that provides comprehensive Terraform state
+ file protection through automated backup, encryption, versioning, and
+ restoration capabilities.
+ .
+ It helps prevent the critical risk of losing terraform.tfstate files, which
+ can result in infrastructure mapping loss, duplicate resource creation, and
+ operational downtime.
+ .
+ Features:
+  * Automated state backups before and after Terraform operations
+  * Multiple storage backends (local filesystem, AWS S3)
+  * AES-256-GCM and AWS KMS encryption support
+  * Configurable retention policies
+  * Cross-platform compatibility
+  * Seamless Terraform integration
