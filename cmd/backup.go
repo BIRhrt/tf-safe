@@ -40,10 +40,22 @@ func init() {
 
 func runBackupCommand(cmd *cobra.Command, args []string) error {
 	// Get flags
-	description, _ := cmd.Flags().GetString("description")
-	force, _ := cmd.Flags().GetBool("force")
-	verbose, _ := cmd.Flags().GetBool("verbose")
-	dryRun, _ := cmd.Flags().GetBool("dry-run")
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
+		return fmt.Errorf("failed to get description flag: %w", err)
+	}
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return fmt.Errorf("failed to get force flag: %w", err)
+	}
+	verbose, err := cmd.Flags().GetBool("verbose")
+	if err != nil {
+		return fmt.Errorf("failed to get verbose flag: %w", err)
+	}
+	dryRun, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return fmt.Errorf("failed to get dry-run flag: %w", err)
+	}
 
 	// Initialize logger
 	logLevel := utils.LogLevelInfo

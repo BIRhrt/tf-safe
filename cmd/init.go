@@ -40,18 +40,29 @@ func init() {
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
-	interactive, _ := cmd.Flags().GetBool("interactive")
-	force, _ := cmd.Flags().GetBool("force")
-	template, _ := cmd.Flags().GetString("template")
-	output, _ := cmd.Flags().GetString("output")
+	interactive, err := cmd.Flags().GetBool("interactive")
+	if err != nil {
+		return fmt.Errorf("failed to get interactive flag: %w", err)
+	}
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return fmt.Errorf("failed to get force flag: %w", err)
+	}
+	template, err := cmd.Flags().GetString("template")
+	if err != nil {
+		return fmt.Errorf("failed to get template flag: %w", err)
+	}
+	output, err := cmd.Flags().GetString("output")
+	if err != nil {
+		return fmt.Errorf("failed to get output flag: %w", err)
+	}
 	
 	// Check if config file already exists
-	if _, err := os.Stat(output); err == nil && !force {
+	if _, statErr := os.Stat(output); statErr == nil && !force {
 		return fmt.Errorf("configuration file %s already exists. Use --force to overwrite", output)
 	}
 	
 	var cfg *types.Config
-	var err error
 	
 	if interactive {
 		cfg, err = createInteractiveConfig()
@@ -182,7 +193,10 @@ func createInteractiveConfig() (*types.Config, error) {
 
 func promptString(reader *bufio.Reader, prompt, defaultValue string) string {
 	fmt.Printf("%s [%s]: ", prompt, defaultValue)
-	input, _ := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return defaultValue
+	}
 	input = strings.TrimSpace(input)
 	if input == "" {
 		return defaultValue
@@ -197,7 +211,10 @@ func promptBool(reader *bufio.Reader, prompt string, defaultValue bool) bool {
 	}
 	
 	fmt.Printf("%s (y/n) [%s]: ", prompt, defaultStr)
-	input, _ := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return defaultValue
+	}
 	input = strings.TrimSpace(strings.ToLower(input))
 	
 	if input == "" {
@@ -209,7 +226,10 @@ func promptBool(reader *bufio.Reader, prompt string, defaultValue bool) bool {
 
 func promptInt(reader *bufio.Reader, prompt string, defaultValue int) int {
 	fmt.Printf("%s [%d]: ", prompt, defaultValue)
-	input, _ := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return defaultValue
+	}
 	input = strings.TrimSpace(input)
 	
 	if input == "" {
@@ -225,7 +245,10 @@ func promptInt(reader *bufio.Reader, prompt string, defaultValue int) int {
 
 func promptChoice(reader *bufio.Reader, prompt string, choices []string, defaultValue string) string {
 	fmt.Printf("%s (%s) [%s]: ", prompt, strings.Join(choices, "/"), defaultValue)
-	input, _ := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return defaultValue
+	}
 	input = strings.TrimSpace(input)
 	
 	if input == "" {
@@ -244,7 +267,10 @@ func promptChoice(reader *bufio.Reader, prompt string, choices []string, default
 
 func promptPassword(reader *bufio.Reader, prompt string) string {
 	fmt.Printf("%s: ", prompt)
-	input, _ := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return ""
+	}
 	return strings.TrimSpace(input)
 }
 

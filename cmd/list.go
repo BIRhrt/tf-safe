@@ -43,10 +43,22 @@ func init() {
 
 func runListCommand(cmd *cobra.Command, args []string) error {
 	// Get flags
-	format, _ := cmd.Flags().GetString("format")
-	storageFilter, _ := cmd.Flags().GetString("storage")
-	limit, _ := cmd.Flags().GetInt("limit")
-	verbose, _ := cmd.Flags().GetBool("verbose")
+	format, err := cmd.Flags().GetString("format")
+	if err != nil {
+		return fmt.Errorf("failed to get format flag: %w", err)
+	}
+	storageFilter, err := cmd.Flags().GetString("storage")
+	if err != nil {
+		return fmt.Errorf("failed to get storage flag: %w", err)
+	}
+	limit, err := cmd.Flags().GetInt("limit")
+	if err != nil {
+		return fmt.Errorf("failed to get limit flag: %w", err)
+	}
+	verbose, err := cmd.Flags().GetBool("verbose")
+	if err != nil {
+		return fmt.Errorf("failed to get verbose flag: %w", err)
+	}
 
 	// Validate format
 	validFormats := []string{"table", "json", "yaml"}

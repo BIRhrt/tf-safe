@@ -48,11 +48,26 @@ func runRestoreCommand(cmd *cobra.Command, args []string) error {
 	backupID := args[0]
 	
 	// Get flags
-	targetPath, _ := cmd.Flags().GetString("target")
-	force, _ := cmd.Flags().GetBool("force")
-	noBackup, _ := cmd.Flags().GetBool("no-backup")
-	verbose, _ := cmd.Flags().GetBool("verbose")
-	dryRun, _ := cmd.Flags().GetBool("dry-run")
+	targetPath, err := cmd.Flags().GetString("target")
+	if err != nil {
+		return fmt.Errorf("failed to get target flag: %w", err)
+	}
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return fmt.Errorf("failed to get force flag: %w", err)
+	}
+	noBackup, err := cmd.Flags().GetBool("no-backup")
+	if err != nil {
+		return fmt.Errorf("failed to get no-backup flag: %w", err)
+	}
+	verbose, err := cmd.Flags().GetBool("verbose")
+	if err != nil {
+		return fmt.Errorf("failed to get verbose flag: %w", err)
+	}
+	dryRun, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return fmt.Errorf("failed to get dry-run flag: %w", err)
+	}
 
 	// Initialize logger
 	logLevel := utils.LogLevelInfo

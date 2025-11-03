@@ -261,14 +261,14 @@ func isValidS3BucketName(name string) bool {
 	}
 	
 	// Must start and end with lowercase letter or number
-	matched, _ := regexp.MatchString(`^[a-z0-9].*[a-z0-9]$`, name)
-	if !matched {
+	matched, err := regexp.MatchString(`^[a-z0-9].*[a-z0-9]$`, name)
+	if err != nil || !matched {
 		return false
 	}
 	
 	// Can contain lowercase letters, numbers, hyphens, and periods
-	matched, _ = regexp.MatchString(`^[a-z0-9.-]+$`, name)
-	if !matched {
+	matched, err = regexp.MatchString(`^[a-z0-9.-]+$`, name)
+	if err != nil || !matched {
 		return false
 	}
 	
@@ -285,7 +285,10 @@ func isValidGCSBucketName(name string) bool {
 	if len(name) < 3 || len(name) > 63 {
 		return false
 	}
-	matched, _ := regexp.MatchString(`^[a-z0-9][a-z0-9._-]*[a-z0-9]$`, name)
+	matched, err := regexp.MatchString(`^[a-z0-9][a-z0-9._-]*[a-z0-9]$`, name)
+	if err != nil {
+		return false
+	}
 	return matched
 }
 

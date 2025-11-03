@@ -66,7 +66,7 @@ func runPlanCommand(args []string) error {
 	wrapper.AddHook(backupHook)
 
 	// Add logging hook if verbose mode is enabled
-	if verbose, _ := rootCmd.PersistentFlags().GetBool("verbose"); verbose {
+	if verbose, err := rootCmd.PersistentFlags().GetBool("verbose"); err == nil && verbose {
 		loggingHook := terraform.NewLoggingHook(true)
 		wrapper.AddHook(loggingHook)
 	}

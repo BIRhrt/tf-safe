@@ -63,19 +63,31 @@ func (m *Manager) Validate(config *types.Config) error {
 
 // GetStorageConfig returns the local storage configuration
 func (m *Manager) GetStorageConfig() types.LocalConfig {
-	config, _ := m.Load()
+	config, err := m.Load()
+	if err != nil {
+		// Return default config on error
+		return types.LocalConfig{}
+	}
 	return config.Local
 }
 
 // GetRemoteConfig returns the remote storage configuration
 func (m *Manager) GetRemoteConfig() types.RemoteConfig {
-	config, _ := m.Load()
+	config, err := m.Load()
+	if err != nil {
+		// Return default config on error
+		return types.RemoteConfig{}
+	}
 	return config.Remote
 }
 
 // GetEncryptionConfig returns the encryption configuration
 func (m *Manager) GetEncryptionConfig() types.EncryptionConfig {
-	config, _ := m.Load()
+	config, err := m.Load()
+	if err != nil {
+		// Return default config on error
+		return types.EncryptionConfig{}
+	}
 	return config.Encryption
 }
 
