@@ -9,20 +9,20 @@ class TfSafe < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/BIRhrt/tf-safe/releases/download/v#{version}/tf-safe-darwin-arm64.tar.gz"
-      sha256 "REPLACE_WITH_ACTUAL_SHA256_FOR_ARM64"
+      sha256 "b5df27f1b9e87d5bf49525cfa293b207b5caed082e5aa0772b1975224116ef16"
     else
       url "https://github.com/BIRhrt/tf-safe/releases/download/v#{version}/tf-safe-darwin-amd64.tar.gz"
-      sha256 "REPLACE_WITH_ACTUAL_SHA256_FOR_AMD64"
+      sha256 "77258995a3b835f45c3f04d4f18780bfce340c2a0475a65182f92c809ded589a"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
       url "https://github.com/BIRhrt/tf-safe/releases/download/v#{version}/tf-safe-linux-arm64.tar.gz"
-      sha256 "REPLACE_WITH_ACTUAL_SHA256_FOR_LINUX_ARM64"
+      sha256 "d8923310099a127b5e181659f0c43f4d45e364b740f65b76394fba18c86d4bf1"
     else
       url "https://github.com/BIRhrt/tf-safe/releases/download/v#{version}/tf-safe-linux-amd64.tar.gz"
-      sha256 "REPLACE_WITH_ACTUAL_SHA256_FOR_LINUX_AMD64"
+      sha256 "eed72faf397159b65126d796d68de827eb1b93207edffc5ee353383f00cc6cab"
     end
   end
 
