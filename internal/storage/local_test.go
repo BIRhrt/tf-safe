@@ -17,7 +17,7 @@ func TestLocalStorage_Store(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	config := types.LocalConfig{
 		Enabled: true,
@@ -67,7 +67,7 @@ func TestLocalStorage_Store(t *testing.T) {
 
 func TestLocalStorage_Retrieve(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "tf-safe-local-retrieve-test")
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	config := types.LocalConfig{
 		Enabled: true,
@@ -116,7 +116,7 @@ func TestLocalStorage_Retrieve(t *testing.T) {
 
 func TestLocalStorage_List(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "tf-safe-local-list-test")
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	config := types.LocalConfig{
 		Enabled: true,
@@ -177,7 +177,7 @@ func TestLocalStorage_List(t *testing.T) {
 
 func TestLocalStorage_Delete(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "tf-safe-local-delete-test")
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	config := types.LocalConfig{
 		Enabled: true,
@@ -236,7 +236,7 @@ func TestLocalStorage_Delete(t *testing.T) {
 
 func TestLocalStorage_Exists(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "tf-safe-local-exists-test")
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	config := types.LocalConfig{
 		Enabled: true,

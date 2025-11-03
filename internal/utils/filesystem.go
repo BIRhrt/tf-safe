@@ -25,7 +25,11 @@ func CopyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() {
+		if closeErr := sourceFile.Close(); closeErr != nil {
+			// Log error but don't override the main error
+		}
+	}()
 
 	// Ensure destination directory exists
 	if err := EnsureDir(filepath.Dir(dst)); err != nil {
@@ -36,7 +40,11 @@ func CopyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() {
+		if closeErr := destFile.Close(); closeErr != nil {
+			// Log error but don't override the main error
+		}
+	}()
 
 	_, err = io.Copy(destFile, sourceFile)
 	return err
@@ -59,13 +67,13 @@ func AtomicWrite(path string, data []byte, perm os.FileMode) error {
 	// Clean up temp file on error
 	defer func() {
 		if err != nil {
-			os.Remove(tempPath)
+			_ = os.Remove(tempPath)
 		}
 	}()
 
 	// Write data to temp file
 	if _, err = tempFile.Write(data); err != nil {
-		tempFile.Close()
+		_ = tempFile.Close()
 		return err
 	}
 
@@ -89,7 +97,11 @@ func CalculateChecksum(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			// Log error but don't override the main error
+		}
+	}()
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {

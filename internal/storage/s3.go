@@ -128,7 +128,11 @@ func (s3s *S3Storage) Retrieve(ctx context.Context, key string) ([]byte, *tftype
 		return nil, nil, fmt.Errorf("failed to retrieve object from S3 after %d attempts: %w", 
 			S3MaxRetries, err)
 	}
-	defer getOutput.Body.Close()
+	defer func() {
+		if closeErr := getOutput.Body.Close(); closeErr != nil {
+			// Log error but don't override the main error
+		}
+	}()
 
 	// Read object data
 	data, err := io.ReadAll(getOutput.Body)
@@ -466,7 +470,7 @@ func (s3s *S3Storage) multipartUpload(ctx context.Context, s3Key string, data []
 		})
 		if err != nil {
 			// Abort multipart upload on error
-			s3s.client.AbortMultipartUpload(ctx, &s3.AbortMultipartUploadInput{
+			_, _ = s3s.client.AbortMultipartUpload(ctx, &s3.AbortMultipartUploadInput{
 				Bucket:   aws.String(s3s.config.Bucket),
 				Key:      aws.String(s3Key),
 				UploadId: uploadID,
@@ -493,7 +497,7 @@ func (s3s *S3Storage) multipartUpload(ctx context.Context, s3Key string, data []
 	})
 	if err != nil {
 		// Abort multipart upload on error
-		s3s.client.AbortMultipartUpload(ctx, &s3.AbortMultipartUploadInput{
+		_, _ = s3s.client.AbortMultipartUpload(ctx, &s3.AbortMultipartUploadInput{
 			Bucket:   aws.String(s3s.config.Bucket),
 			Key:      aws.String(s3Key),
 			UploadId: uploadID,

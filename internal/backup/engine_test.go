@@ -97,7 +97,7 @@ func TestEngine_CreateBackup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	stateContent := `{"version": 4, "terraform_version": "1.0.0", "serial": 1}`
 	stateFile := filepath.Join(tempDir, "terraform.tfstate")
@@ -107,8 +107,8 @@ func TestEngine_CreateBackup(t *testing.T) {
 
 	// Change to temp directory
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	_ = os.Chdir(tempDir)
 
 	// Create mock storage and engine
 	mockStorage := NewMockStorageBackend("local")
@@ -162,11 +162,11 @@ func TestEngine_CreateBackup_MissingStateFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	_ = os.Chdir(tempDir)
 
 	mockStorage := NewMockStorageBackend("local")
 	config := &types.Config{}
@@ -258,7 +258,7 @@ func TestEngine_ValidateBackup(t *testing.T) {
 		Size:     int64(len(testData)),
 		Checksum: utils.CalculateChecksumBytes(testData),
 	}
-	mockStorage.Store(ctx, backupID, testData, metadata)
+	_ = mockStorage.Store(ctx, backupID, testData, metadata)
 
 	// Test validation of valid backup
 	err := engine.ValidateBackup(ctx, backupID)
@@ -272,7 +272,7 @@ func TestEngine_ValidateBackup(t *testing.T) {
 		Size:     int64(len(testData)),
 		Checksum: "wrong-checksum",
 	}
-	mockStorage.Store(ctx, "corrupted-backup", testData, corruptedMetadata)
+	_ = mockStorage.Store(ctx, "corrupted-backup", testData, corruptedMetadata)
 
 	err = engine.ValidateBackup(ctx, "corrupted-backup")
 	if err == nil {
@@ -371,7 +371,7 @@ func TestEngine_WithRemoteStorage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	stateContent := `{"version": 4}`
 	stateFile := filepath.Join(tempDir, "terraform.tfstate")

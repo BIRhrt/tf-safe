@@ -21,7 +21,7 @@ func TestBackupRestoreWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create test Terraform state file
 	stateContent := `{
@@ -61,8 +61,8 @@ func TestBackupRestoreWorkflow(t *testing.T) {
 
 	// Change to temp directory
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	_ = os.Chdir(tempDir)
 
 	// Setup configuration
 	config := &types.Config{
@@ -274,7 +274,7 @@ func TestEncryptedBackupWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create test state file
 	stateContent := `{"version": 4, "terraform_version": "1.0.0", "serial": 1}`

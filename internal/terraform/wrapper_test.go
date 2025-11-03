@@ -142,7 +142,7 @@ func TestWrapper_DetectStateFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	stateContent := `{"version": 4, "terraform_version": "1.0.0"}`
 	stateFile := filepath.Join(tempDir, "terraform.tfstate")
@@ -152,8 +152,8 @@ func TestWrapper_DetectStateFile(t *testing.T) {
 
 	// Change to temp directory
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	_ = os.Chdir(tempDir)
 
 	configManager := NewMockConfigManager()
 	backupEngine := NewMockBackupEngine()
@@ -180,11 +180,11 @@ func TestWrapper_DetectStateFile_NoStateFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	_ = os.Chdir(tempDir)
 
 	configManager := NewMockConfigManager()
 	backupEngine := NewMockBackupEngine()
@@ -202,7 +202,7 @@ func TestWrapper_DetectStateFile_MultipleStateFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// The detector only looks for specific filenames, so this test
 	// verifies that it works correctly with just terraform.tfstate
@@ -213,8 +213,8 @@ func TestWrapper_DetectStateFile_MultipleStateFiles(t *testing.T) {
 	}
 
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	_ = os.Chdir(tempDir)
 
 	configManager := NewMockConfigManager()
 	backupEngine := NewMockBackupEngine()
@@ -236,7 +236,7 @@ func TestWrapper_ValidateStateFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	configManager := NewMockConfigManager()
 	backupEngine := NewMockBackupEngine()

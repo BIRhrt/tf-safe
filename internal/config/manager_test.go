@@ -15,7 +15,7 @@ func TestManager_Load(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create test config file
 	configContent := `
@@ -47,8 +47,8 @@ retention:
 
 	// Change to temp directory
 	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tempDir)
+	defer func() { _ = os.Chdir(originalDir) }()
+	_ = os.Chdir(tempDir)
 
 	manager := NewManager()
 	manager.AddSource(NewFileSource(".tf-safe.yaml", 20, "project config"))
@@ -187,7 +187,7 @@ func TestManager_Save(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	manager := NewManager()
 	config := manager.CreateDefault()

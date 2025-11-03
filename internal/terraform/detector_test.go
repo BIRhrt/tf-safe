@@ -12,7 +12,7 @@ func TestStateDetector_FindStateFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	detector := NewStateDetector()
 
@@ -91,7 +91,7 @@ func TestStateDetector_IsValidStateFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	detector := NewStateDetector()
 
@@ -164,7 +164,7 @@ func TestStateDetector_IsValidStateFile_EmptyFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	detector := NewStateDetector()
 
@@ -188,7 +188,7 @@ func TestStateDetector_IsValidStateFile_OldVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	detector := NewStateDetector()
 
@@ -219,7 +219,7 @@ func TestStateDetector_IsValidStateFile_WithResources(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	detector := NewStateDetector()
 

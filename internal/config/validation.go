@@ -236,8 +236,8 @@ func checkWritePermission(dir string) error {
 	if err != nil {
 		return err
 	}
-	file.Close()
-	os.Remove(tempFile)
+	_ = file.Close()
+	_ = os.Remove(tempFile)
 	return nil
 }
 

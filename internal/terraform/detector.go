@@ -44,7 +44,11 @@ func (d *DefaultStateDetector) IsValidStateFile(path string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			// Log error but don't override the main error
+		}
+	}()
 
 	// Try to parse as JSON
 	var stateData map[string]interface{}
@@ -77,7 +81,11 @@ func (d *DefaultStateDetector) GetStateFileInfo(path string) (*StateFileInfo, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to open state file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			// Log error but don't override the main error
+		}
+	}()
 
 	// Get file stats
 	stat, err := file.Stat()

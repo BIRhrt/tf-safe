@@ -78,13 +78,13 @@ func (ls *LocalStorage) Store(ctx context.Context, key string, data []byte, meta
 	metadataBytes, err := json.Marshal(metadata)
 	if err != nil {
 		// Clean up backup file on metadata error
-		os.Remove(backupPath)
+		_ = os.Remove(backupPath)
 		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 
 	if err := utils.AtomicWrite(metadataPath, metadataBytes, 0600); err != nil {
 		// Clean up backup file on metadata error
-		os.Remove(backupPath)
+		_ = os.Remove(backupPath)
 		return fmt.Errorf("failed to write metadata file %s: %w", metadataPath, err)
 	}
 

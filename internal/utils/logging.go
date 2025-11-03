@@ -32,28 +32,28 @@ func NewLogger(level LogLevel) *Logger {
 // Debug logs a debug message
 func (l *Logger) Debug(msg string, args ...interface{}) {
 	if l.level <= LogLevelDebug {
-		l.Printf("[DEBUG] "+msg, args...)
+		l.Logger.Printf("[DEBUG] "+msg, args...)
 	}
 }
 
 // Info logs an info message
 func (l *Logger) Info(msg string, args ...interface{}) {
 	if l.level <= LogLevelInfo {
-		l.Printf("[INFO] "+msg, args...)
+		l.Logger.Printf("[INFO] "+msg, args...)
 	}
 }
 
 // Warn logs a warning message
 func (l *Logger) Warn(msg string, args ...interface{}) {
 	if l.level <= LogLevelWarn {
-		l.Printf("[WARN] "+msg, args...)
+		l.Logger.Printf("[WARN] "+msg, args...)
 	}
 }
 
 // Error logs an error message
 func (l *Logger) Error(msg string, args ...interface{}) {
 	if l.level <= LogLevelError {
-		l.Printf("[ERROR] "+msg, args...)
+		l.Logger.Printf("[ERROR] "+msg, args...)
 	}
 }
 
