@@ -30,7 +30,7 @@ grep -r "version" main.go README.md
 
 2. **Push code**:
    ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/tf-safe.git
+   git remote add origin https://github.com/BIRhrt/tf-safe.git
    git branch -M main
    git push -u origin main
    ```
@@ -84,7 +84,7 @@ grep -r "version" main.go README.md
 
    Installation:
    - Download binaries from GitHub releases
-   - Use installation script: curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/tf-safe/main/scripts/install.sh | bash"
+   - Use installation script: curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash"
 
    git push origin v1.0.0
    ```
@@ -101,7 +101,7 @@ grep -r "version" main.go README.md
 1. **Create Homebrew tap**:
    ```bash
    # Create new repository: homebrew-tap
-   git clone https://github.com/YOUR_USERNAME/homebrew-tap.git
+   git clone https://github.com/BIRhrt/homebrew-tap.git
    cd homebrew-tap
    mkdir Formula
    ```
@@ -123,7 +123,7 @@ grep -r "version" main.go README.md
 
 3. **Test installation**:
    ```bash
-   brew tap YOUR_USERNAME/tap
+   brew tap BIRhrt/tap
    brew install tf-safe
    tf-safe --version
    ```
@@ -133,8 +133,8 @@ grep -r "version" main.go README.md
 1. **Update install script**:
    ```bash
    # Edit scripts/install.sh
-   # Replace YOUR_USERNAME with your GitHub username
-   sed -i 's/your-org/YOUR_USERNAME/g' scripts/install.sh
+   # Replace placeholder with your GitHub username (already done)
+   # sed -i 's/your-org/BIRhrt/g' scripts/install.sh
    
    git add scripts/install.sh
    git commit -m "fix: update install script with correct repository"
@@ -143,7 +143,7 @@ grep -r "version" main.go README.md
 
 2. **Test installation**:
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/tf-safe/main/scripts/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
    ```
 
 ### 📢 Announce Release (10 minutes)
@@ -169,10 +169,10 @@ grep -r "version" main.go README.md
 1. **Test everything works**:
    ```bash
    # Test Homebrew installation
-   brew install YOUR_USERNAME/tap/tf-safe
+   brew install BIRhrt/tap/tf-safe
    
    # Test manual installation
-   curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/tf-safe/main/scripts/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
    
    # Test basic functionality
    tf-safe --version
@@ -194,7 +194,7 @@ make clean && make test && make build-all
 git tag -a v1.0.0 -m "Release v1.0.0" && git push origin v1.0.0
 
 # Test installation
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/tf-safe/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
 
 # Update Homebrew formula
 # 1. Get SHA256 from GitHub release

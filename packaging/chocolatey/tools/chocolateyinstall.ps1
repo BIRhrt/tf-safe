@@ -5,7 +5,7 @@ $ErrorActionPreference = 'Stop'
 $packageName = 'tf-safe'
 $toolsDir = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $version = '1.0.0'
-$url64 = "https://github.com/your-org/tf-safe/releases/download/v$version/tf-safe-windows-amd64.zip"
+$url64 = "https://github.com/BIRhrt/tf-safe/releases/download/v$version/tf-safe-windows-amd64.zip"
 
 $packageArgs = @{
   packageName   = $packageName

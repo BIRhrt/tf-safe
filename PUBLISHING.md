@@ -87,7 +87,7 @@ This comprehensive guide covers all steps needed to publish tf-safe from develop
 2. **Configure repository settings**:
    ```bash
    # Add remote origin
-   git remote add origin https://github.com/your-org/tf-safe.git
+   git remote add origin https://github.com/BIRhrt/tf-safe.git
    
    # Push initial code
    git add .
@@ -167,7 +167,7 @@ This comprehensive guide covers all steps needed to publish tf-safe from develop
 1. **Create Homebrew tap** (recommended for initial release):
    ```bash
    # Create tap repository
-   git clone https://github.com/your-org/homebrew-tap.git
+   git clone https://github.com/BIRhrt/homebrew-tap.git
    cd homebrew-tap
    
    # Copy formula
@@ -182,7 +182,7 @@ This comprehensive guide covers all steps needed to publish tf-safe from develop
 2. **Test Homebrew installation**:
    ```bash
    # Add tap and install
-   brew tap your-org/tap
+   brew tap BIRhrt/tap
    brew install tf-safe
    
    # Test installation
@@ -199,7 +199,7 @@ This comprehensive guide covers all steps needed to publish tf-safe from develop
 1. **Test package locally**:
    ```bash
    # Build package
-   ./scripts/build-chocolatey.sh 1.0.0 your-org/tf-safe
+   ./scripts/build-chocolatey.sh 1.0.0 BIRhrt/tf-safe
    
    # Test installation
    choco install tf-safe -s dist/
@@ -331,7 +331,7 @@ This comprehensive guide covers all steps needed to publish tf-safe from develop
 make build-all
 
 # Create packages
-./scripts/package-all.sh 1.0.0 your-org/tf-safe
+./scripts/package-all.sh 1.0.0 BIRhrt/tf-safe
 
 # Test installation
 ./scripts/test-install.sh

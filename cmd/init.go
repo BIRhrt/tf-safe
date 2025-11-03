@@ -256,5 +256,5 @@ func showNextSteps(configPath string) {
 	fmt.Println("3. List available backups: tf-safe list")
 	fmt.Println("4. Use tf-safe with Terraform: tf-safe apply")
 	fmt.Println()
-	fmt.Println("📚 For more information, visit: https://github.com/your-org/tf-safe")
+	fmt.Println("📚 For more information, visit: https://github.com/BIRhrt/tf-safe")
 }

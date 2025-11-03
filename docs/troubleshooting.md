@@ -58,7 +58,7 @@ bash: tf-safe: command not found
    brew install tf-safe
    
    # Manual installation
-   curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
    ```
 
 4. **Add to PATH manually:**
@@ -627,9 +627,9 @@ When reporting issues, include:
 
 ### Support Channels
 
-- **GitHub Issues**: [Report bugs and feature requests](https://github.com/your-org/tf-safe/issues)
-- **GitHub Discussions**: [Ask questions and share experiences](https://github.com/your-org/tf-safe/discussions)
-- **Documentation**: [Complete documentation](https://github.com/your-org/tf-safe)
+- **GitHub Issues**: [Report bugs and feature requests](https://github.com/BIRhrt/tf-safe/issues)
+- **GitHub Discussions**: [Ask questions and share experiences](https://github.com/BIRhrt/tf-safe/discussions)
+- **Documentation**: [Complete documentation](https://github.com/BIRhrt/tf-safe)
 
 ### Before Reporting Issues
 

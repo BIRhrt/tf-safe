@@ -4,7 +4,7 @@
 set -e
 
 VERSION=${1:-"1.0.0"}
-GITHUB_REPO=${2:-"your-org/tf-safe"}
+GITHUB_REPO=${2:-"BIRhrt/tf-safe"}
 BUILD_DIR="build/chocolatey"
 PACKAGE_NAME="tf-safe"
 

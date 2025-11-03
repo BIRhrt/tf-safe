@@ -45,7 +45,7 @@ stages:
               terraformVersion: $(TF_VERSION)
 
           - script: |
-              curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+              curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
               tf-safe --version
             displayName: 'Install tf-safe'
 
@@ -125,7 +125,7 @@ stages:
                     terraformVersion: $(TF_VERSION)
 
                 - script: |
-                    curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+                    curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
                   displayName: 'Install tf-safe'
 
                 - script: |
@@ -207,7 +207,7 @@ stages:
                     terraformVersion: $(TF_VERSION)
 
                 - script: |
-                    curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+                    curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
                   displayName: 'Install tf-safe'
 
                 - script: |
@@ -344,7 +344,7 @@ stages:
               terraformVersion: $(TF_VERSION)
 
           - script: |
-              curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+              curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
             displayName: 'Install tf-safe'
 
           - script: |

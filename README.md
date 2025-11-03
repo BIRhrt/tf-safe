@@ -1,7 +1,7 @@
 # tf-safe
 
-[![Build Status](https://github.com/your-org/tf-safe/workflows/build/badge.svg)](https://github.com/your-org/tf-safe/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/your-org/tf-safe)](https://goreportcard.com/report/github.com/your-org/tf-safe)
+[![Build Status](https://github.com/BIRhrt/tf-safe/workflows/build/badge.svg)](https://github.com/BIRhrt/tf-safe/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/BIRhrt/tf-safe)](https://goreportcard.com/report/github.com/BIRhrt/tf-safe)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A lightweight CLI tool that provides comprehensive Terraform state file protection through automated backup, encryption, versioning, and restoration capabilities. Never lose your Terraform state again!
@@ -40,7 +40,7 @@ choco install tf-safe
 
 #### Universal Install Script
 ```bash
-curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
 ```
 
 For detailed installation instructions, see [INSTALL.md](INSTALL.md).
@@ -256,7 +256,7 @@ jobs:
       
       - name: Install tf-safe
         run: |
-          curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
       
       - name: Configure tf-safe
         run: |
@@ -278,7 +278,7 @@ jobs:
 terraform:
   image: hashicorp/terraform:latest
   before_script:
-    - curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+    - curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
     - tf-safe init --storage s3
   script:
     - tf-safe plan
@@ -296,7 +296,7 @@ terraform:
 ### Build Steps
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/tf-safe.git
+git clone https://github.com/BIRhrt/tf-safe.git
 cd tf-safe
 
 # Build for your platform
@@ -401,9 +401,9 @@ logging:
 
 ### Getting Help
 
-- **Documentation**: [GitHub Repository](https://github.com/your-org/tf-safe)
-- **Issues**: [GitHub Issues](https://github.com/your-org/tf-safe/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/tf-safe/discussions)
+- **Documentation**: [GitHub Repository](https://github.com/BIRhrt/tf-safe)
+- **Issues**: [GitHub Issues](https://github.com/BIRhrt/tf-safe/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/BIRhrt/tf-safe/discussions)
 
 ## 🤝 Contributing
 

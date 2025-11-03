@@ -34,7 +34,7 @@ cache:
     
     # Install tf-safe
     if [ ! -f tf-safe ]; then
-      curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+      curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
       cp /usr/local/bin/tf-safe ./tf-safe
     fi
     chmod +x tf-safe

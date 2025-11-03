@@ -32,7 +32,7 @@ choco install tf-safe
 
 ### Download Pre-built Binaries
 
-1. Go to the [releases page](https://github.com/your-org/tf-safe/releases)
+1. Go to the [releases page](https://github.com/BIRhrt/tf-safe/releases)
 2. Download the appropriate binary for your platform:
    - **Linux AMD64**: `tf-safe-linux-amd64.tar.gz`
    - **Linux ARM64**: `tf-safe-linux-arm64.tar.gz`
@@ -44,7 +44,7 @@ choco install tf-safe
 
 ```bash
 # Download and extract (replace with your platform)
-curl -LO https://github.com/your-org/tf-safe/releases/latest/download/tf-safe-linux-amd64.tar.gz
+curl -LO https://github.com/BIRhrt/tf-safe/releases/latest/download/tf-safe-linux-amd64.tar.gz
 tar -xzf tf-safe-linux-amd64.tar.gz
 
 # Make executable and move to PATH
@@ -67,13 +67,13 @@ tf-safe --version
 For Linux and macOS, you can use our installation script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
 ```
 
 Or download and inspect first:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh -o install.sh
 chmod +x install.sh
 ./install.sh
 ```
@@ -89,7 +89,7 @@ chmod +x install.sh
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/tf-safe.git
+git clone https://github.com/BIRhrt/tf-safe.git
 cd tf-safe
 
 # Build for your platform
@@ -213,9 +213,9 @@ sudo rm /usr/bin/tf-safe /usr/local/bin/tf-safe
 
 ## Getting Help
 
-- **Documentation**: [GitHub Repository](https://github.com/your-org/tf-safe)
-- **Issues**: [GitHub Issues](https://github.com/your-org/tf-safe/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/tf-safe/discussions)
+- **Documentation**: [GitHub Repository](https://github.com/BIRhrt/tf-safe)
+- **Issues**: [GitHub Issues](https://github.com/BIRhrt/tf-safe/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/BIRhrt/tf-safe/discussions)
 
 ## Next Steps
 

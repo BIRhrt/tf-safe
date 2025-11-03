@@ -88,7 +88,7 @@ For more information, see:
     tf-safe --help
     tf-safe <command> --help
 
-Documentation: https://github.com/your-org/tf-safe
+Documentation: https://github.com/BIRhrt/tf-safe
 EOF
 
 # Create copyright file
@@ -96,7 +96,7 @@ cat > "$PACKAGE_DIR/usr/share/doc/$PACKAGE_NAME/copyright" << EOF
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: tf-safe
 Upstream-Contact: tf-safe Team <maintainers@tf-safe.dev>
-Source: https://github.com/your-org/tf-safe
+Source: https://github.com/BIRhrt/tf-safe
 
 Files: *
 Copyright: $(date +%Y) tf-safe Team

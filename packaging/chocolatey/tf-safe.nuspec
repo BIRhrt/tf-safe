@@ -3,18 +3,18 @@
   <metadata>
     <id>tf-safe</id>
     <version>1.0.0</version>
-    <packageSourceUrl>https://github.com/your-org/tf-safe</packageSourceUrl>
+    <packageSourceUrl>https://github.com/BIRhrt/tf-safe</packageSourceUrl>
     <owners>tf-safe Team</owners>
     <title>tf-safe</title>
     <authors>tf-safe Team</authors>
-    <projectUrl>https://github.com/your-org/tf-safe</projectUrl>
-    <iconUrl>https://raw.githubusercontent.com/your-org/tf-safe/main/assets/icon.png</iconUrl>
+    <projectUrl>https://github.com/BIRhrt/tf-safe</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/BIRhrt/tf-safe/main/assets/icon.png</iconUrl>
     <copyright>Copyright (c) 2024 tf-safe Team</copyright>
-    <licenseUrl>https://github.com/your-org/tf-safe/blob/main/LICENSE</licenseUrl>
+    <licenseUrl>https://github.com/BIRhrt/tf-safe/blob/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <projectSourceUrl>https://github.com/your-org/tf-safe</projectSourceUrl>
-    <docsUrl>https://github.com/your-org/tf-safe/blob/main/README.md</docsUrl>
-    <bugTrackerUrl>https://github.com/your-org/tf-safe/issues</bugTrackerUrl>
+    <projectSourceUrl>https://github.com/BIRhrt/tf-safe</projectSourceUrl>
+    <docsUrl>https://github.com/BIRhrt/tf-safe/blob/main/README.md</docsUrl>
+    <bugTrackerUrl>https://github.com/BIRhrt/tf-safe/issues</bugTrackerUrl>
     <tags>terraform state backup cli devops infrastructure</tags>
     <summary>Terraform state file protection and backup tool</summary>
     <description>
@@ -55,7 +55,7 @@ tf-safe restore &lt;backup-id&gt;
 * Windows 10 or later
 * Terraform (recommended)
     </description>
-    <releaseNotes>https://github.com/your-org/tf-safe/releases/tag/v1.0.0</releaseNotes>
+    <releaseNotes>https://github.com/BIRhrt/tf-safe/releases/tag/v1.0.0</releaseNotes>
     <dependencies>
       <dependency id="terraform" version="0.12.0" />
     </dependencies>

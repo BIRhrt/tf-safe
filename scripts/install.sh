@@ -4,7 +4,7 @@
 set -e
 
 # Configuration
-GITHUB_REPO="your-org/tf-safe"
+GITHUB_REPO="BIRhrt/tf-safe"
 BINARY_NAME="tf-safe"
 INSTALL_DIR="/usr/local/bin"
 

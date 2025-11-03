@@ -4,7 +4,7 @@
 set -e
 
 VERSION=${1:-"1.0.0"}
-GITHUB_REPO=${2:-"your-org/tf-safe"}
+GITHUB_REPO=${2:-"BIRhrt/tf-safe"}
 FORMULA_FILE="packaging/homebrew/tf-safe.rb"
 
 if [ ! -f "$FORMULA_FILE" ]; then
@@ -102,7 +102,7 @@ echo ""
 echo "Or create a custom tap:"
 echo "1. Create a repository named homebrew-tap"
 echo "2. Add $FORMULA_FILE as Formula/tf-safe.rb"
-echo "3. Users can install with: brew install your-org/tap/tf-safe"
+echo "3. Users can install with: brew install BIRhrt/tap/tf-safe"
 
 # Cleanup
 rm -f /tmp/checksums.txt

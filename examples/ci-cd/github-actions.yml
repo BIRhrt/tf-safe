@@ -40,7 +40,7 @@ jobs:
 
       - name: Install tf-safe
         run: |
-          curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
           tf-safe --version
 
       - name: Configure tf-safe
@@ -130,7 +130,7 @@ jobs:
 
       - name: Install tf-safe
         run: |
-          curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
           tf-safe --version
 
       - name: Configure tf-safe for production
@@ -234,7 +234,7 @@ jobs:
 
       - name: Install tf-safe
         run: |
-          curl -fsSL https://raw.githubusercontent.com/your-org/tf-safe/main/scripts/install.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/BIRhrt/tf-safe/main/scripts/install.sh | bash
 
       - name: Configure tf-safe
         run: |

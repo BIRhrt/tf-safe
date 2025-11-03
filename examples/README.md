@@ -355,7 +355,7 @@ logging:
 
 Found an issue with an example or want to add a new one?
 
-1. Check existing [issues](https://github.com/your-org/tf-safe/issues)
+1. Check existing [issues](https://github.com/BIRhrt/tf-safe/issues)
 2. Create a new issue or pull request
 3. Follow the [contribution guidelines](../CONTRIBUTING.md)
 
