@@ -191,7 +191,7 @@ func TestManager_Save(t *testing.T) {
 
 	manager := NewManager()
 	config := manager.CreateDefault()
-	
+
 	// Modify some values
 	config.Local.RetentionCount = 15
 	config.Encryption.Provider = "aes"

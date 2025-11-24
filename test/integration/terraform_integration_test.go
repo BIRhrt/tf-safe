@@ -130,7 +130,7 @@ func TestTerraformWrapperIntegration(t *testing.T) {
 	// Setup components
 	logger := utils.NewLogger(utils.LogLevelInfo)
 	configManager := config.NewManager()
-	
+
 	storageFactory := storage.NewStorageFactory(logger)
 	localStorage, err := storageFactory.CreateLocal(testConfig.Local)
 	if err != nil {
@@ -155,7 +155,7 @@ func TestTerraformWrapperIntegration(t *testing.T) {
 	// Handle potential symlink resolution on macOS
 	expectedResolved, _ := filepath.EvalSymlinks(expectedPath)
 	detectedResolved, _ := filepath.EvalSymlinks(detectedFile)
-	
+
 	if detectedResolved != expectedResolved {
 		t.Errorf("Expected detected file %s, got %s", expectedResolved, detectedResolved)
 	}
@@ -172,7 +172,7 @@ func TestTerraformWrapperIntegration(t *testing.T) {
 		t.Logf("Terraform binary check failed (expected in environments without Terraform): %v", err)
 	} else {
 		t.Log("Terraform binary check passed")
-		
+
 		// If Terraform is available, test version detection
 		version, err := wrapper.GetTerraformVersion()
 		if err != nil {
@@ -252,7 +252,7 @@ func TestEndToEndBackupWithTerraform(t *testing.T) {
 
 	logger := utils.NewLogger(utils.LogLevelInfo)
 	configManager := config.NewManager()
-	
+
 	storageFactory := storage.NewStorageFactory(logger)
 	localStorage, err := storageFactory.CreateLocal(testConfig.Local)
 	if err != nil {
@@ -367,7 +367,7 @@ func TestEndToEndBackupWithTerraform(t *testing.T) {
 	// Step 6: Test restoration to previous state
 	t.Log("Step 6: Testing restoration to previous state...")
 	restoreEngine := restore.NewEngine(localStorage, backupEngine, testConfig, logger)
-	
+
 	restoreOpts := types.RestoreOptions{
 		BackupID:     metadata1.ID,
 		TargetPath:   stateFile,

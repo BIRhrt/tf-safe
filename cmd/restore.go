@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
 	"tf-safe/internal/backup"
 	"tf-safe/internal/config"
 	"tf-safe/internal/restore"
 	"tf-safe/internal/storage"
 	"tf-safe/internal/utils"
 	"tf-safe/pkg/types"
+
+	"github.com/spf13/cobra"
 )
 
 // restoreCmd represents the restore command
@@ -30,23 +31,24 @@ Examples:
   tf-safe restore terraform.tfstate.2025-10-28T11:50:27Z
   tf-safe restore terraform.tfstate.2025-10-28T11:50:27Z -t custom.tfstate
   tf-safe restore terraform.tfstate.2025-10-28T11:50:27Z --force
-  tf-safe restore terraform.tfstate.2025-10-28T11:50:27Z --no-backup`,
-	Args: cobra.ExactArgs(1),
+  tf-safe restore terraform.tfstate.2025-10-28T11:50:27Z --no-backup
+  tf-safe restore --latest --tags "env=prod"  # Restore latest backup with tags`,
+	Args: cobra.MaximumNArgs(1),
 	RunE: runRestoreCommand,
 }
 
 func init() {
 	rootCmd.AddCommand(restoreCmd)
-	
+
 	// Add restore-specific flags
 	restoreCmd.Flags().StringP("target", "t", "terraform.tfstate", "Target file path for restoration")
 	restoreCmd.Flags().BoolP("force", "f", false, "Force restore without confirmation")
 	restoreCmd.Flags().Bool("no-backup", false, "Skip creating backup before restore")
+	restoreCmd.Flags().Bool("latest", false, "Restore the latest backup (optionally filtered by tags)")
+	restoreCmd.Flags().String("tags", "", "Filter by tags when using --latest (key1=value1,key2=value2)")
 }
 
 func runRestoreCommand(cmd *cobra.Command, args []string) error {
-	backupID := args[0]
-	
 	// Get flags
 	targetPath, err := cmd.Flags().GetString("target")
 	if err != nil {
@@ -67,6 +69,14 @@ func runRestoreCommand(cmd *cobra.Command, args []string) error {
 	dryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return fmt.Errorf("failed to get dry-run flag: %w", err)
+	}
+	latest, err := cmd.Flags().GetBool("latest")
+	if err != nil {
+		return fmt.Errorf("failed to get latest flag: %w", err)
+	}
+	tagsStr, err := cmd.Flags().GetString("tags")
+	if err != nil {
+		return fmt.Errorf("failed to get tags flag: %w", err)
 	}
 
 	// Initialize logger
@@ -89,7 +99,7 @@ func runRestoreCommand(cmd *cobra.Command, args []string) error {
 
 	// Create storage backend
 	localStorage := storage.NewLocalStorage(cfg.Local, logger)
-	
+
 	// Initialize storage backend
 	ctx := context.Background()
 	if err := localStorage.Initialize(ctx); err != nil {
@@ -98,6 +108,33 @@ func runRestoreCommand(cmd *cobra.Command, args []string) error {
 
 	// Create backup engine
 	backupEngine := backup.NewEngine(localStorage, cfg, logger)
+
+	// Determine backup ID
+	var backupID string
+	if latest {
+		// Find latest backup by tags
+		searchEngine := backup.NewSearchEngine(backupEngine)
+
+		var tagFilter types.Tags
+		if tagsStr != "" {
+			tagFilter, err = types.ParseTagString(tagsStr)
+			if err != nil {
+				return fmt.Errorf("invalid tags format: %w", err)
+			}
+		}
+
+		metadata, err := searchEngine.FindLatestByTags(ctx, tagFilter)
+		if err != nil {
+			return fmt.Errorf("failed to find latest backup: %w", err)
+		}
+		backupID = metadata.ID
+		fmt.Printf("Found latest backup: %s\n", backupID)
+	} else {
+		if len(args) == 0 {
+			return fmt.Errorf("backup ID is required when --latest is not specified")
+		}
+		backupID = args[0]
+	}
 
 	// Create restore engine
 	restoreEngine := restore.NewEngine(localStorage, backupEngine, cfg, logger)
@@ -143,7 +180,7 @@ func runRestoreCommand(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to read user input: %w", err)
 		}
-		
+
 		response = strings.TrimSpace(strings.ToLower(response))
 		if response != "y" && response != "yes" {
 			fmt.Println("Restore cancelled.")

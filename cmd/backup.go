@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
 	"tf-safe/internal/backup"
 	"tf-safe/internal/config"
 	"tf-safe/internal/storage"
 	"tf-safe/internal/utils"
 	"tf-safe/pkg/types"
+
+	"github.com/spf13/cobra"
 )
 
 // backupCmd represents the backup command
@@ -26,15 +27,17 @@ Examples:
   tf-safe backup                    # Backup detected state file
   tf-safe backup terraform.tfstate # Backup specific state file
   tf-safe backup -f                 # Force backup even if no state file exists
-  tf-safe backup -d "Pre-deploy"   # Add description to backup`,
+  tf-safe backup -d "Pre-deploy"   # Add description to backup
+  tf-safe backup --tags "env=prod,version=v1.0" # Backup with tags`,
 	RunE: runBackupCommand,
 }
 
 func init() {
 	rootCmd.AddCommand(backupCmd)
-	
+
 	// Add backup-specific flags
 	backupCmd.Flags().StringP("description", "d", "", "Description for the backup")
+	backupCmd.Flags().StringP("tags", "t", "", "Tags for the backup in format: key1=value1,key2=value2")
 	backupCmd.Flags().BoolP("force", "f", false, "Force backup even if no state file exists")
 }
 
@@ -43,6 +46,10 @@ func runBackupCommand(cmd *cobra.Command, args []string) error {
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return fmt.Errorf("failed to get description flag: %w", err)
+	}
+	tagsStr, err := cmd.Flags().GetString("tags")
+	if err != nil {
+		return fmt.Errorf("failed to get tags flag: %w", err)
 	}
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
@@ -77,7 +84,7 @@ func runBackupCommand(cmd *cobra.Command, args []string) error {
 
 	// Create storage backend
 	localStorage := storage.NewLocalStorage(cfg.Local, logger)
-	
+
 	// Initialize storage backend
 	ctx := context.Background()
 	if err := localStorage.Initialize(ctx); err != nil {
@@ -93,10 +100,20 @@ func runBackupCommand(cmd *cobra.Command, args []string) error {
 		stateFilePath = args[0]
 	}
 
+	// Parse tags
+	var tags types.Tags
+	if tagsStr != "" {
+		tags, err = types.ParseTagString(tagsStr)
+		if err != nil {
+			return fmt.Errorf("invalid tags format: %w", err)
+		}
+	}
+
 	// Create backup options
 	opts := types.BackupOptions{
 		StateFilePath: stateFilePath,
 		Description:   description,
+		Tags:          tags,
 		Force:         force,
 	}
 
@@ -132,6 +149,9 @@ func runBackupCommand(cmd *cobra.Command, args []string) error {
 	}
 	if description != "" {
 		fmt.Printf("  Description: %s\n", description)
+	}
+	if len(metadata.Tags) > 0 {
+		fmt.Printf("  Tags:        %s\n", metadata.Tags.String())
 	}
 
 	// Apply retention policies

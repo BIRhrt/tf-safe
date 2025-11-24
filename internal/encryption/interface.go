@@ -6,13 +6,13 @@ import "context"
 type EncryptionProvider interface {
 	// Encrypt encrypts the provided data
 	Encrypt(ctx context.Context, data []byte) ([]byte, error)
-	
+
 	// Decrypt decrypts the provided encrypted data
 	Decrypt(ctx context.Context, encryptedData []byte) ([]byte, error)
-	
+
 	// GetKeyInfo returns information about the encryption key
 	GetKeyInfo() KeyInfo
-	
+
 	// Initialize sets up the encryption provider
 	Initialize(ctx context.Context) error
 }

@@ -11,12 +11,15 @@ type BackupMetadata struct {
 	StorageType string    `json:"storage_type"`
 	Encrypted   bool      `json:"encrypted"`
 	FilePath    string    `json:"file_path"`
+	Tags        Tags      `json:"tags,omitempty"`        // Tag metadata for categorization
+	Description string    `json:"description,omitempty"` // Human-readable description
 }
 
 // BackupOptions contains options for creating backups
 type BackupOptions struct {
 	StateFilePath string
 	Description   string
+	Tags          Tags
 	Force         bool
 }
 
@@ -29,8 +32,8 @@ type BackupIndex struct {
 
 // RestoreOptions contains options for restoring backups
 type RestoreOptions struct {
-	BackupID      string
-	TargetPath    string
-	CreateBackup  bool
-	Force         bool
+	BackupID     string
+	TargetPath   string
+	CreateBackup bool
+	Force        bool
 }

@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 	"tf-safe/internal/backup"
 	"tf-safe/internal/config"
 	"tf-safe/internal/storage"
 	"tf-safe/internal/utils"
 	"tf-safe/pkg/types"
+
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 // listCmd represents the list command
@@ -28,16 +29,20 @@ Examples:
   tf-safe list                    # List all backups in table format
   tf-safe list -f json           # List backups in JSON format
   tf-safe list -s local          # List only local backups
-  tf-safe list --limit 10        # List only the 10 most recent backups`,
+  tf-safe list --limit 10        # List only the 10 most recent backups
+  tf-safe list --tags "env=prod"  # List backups with specific tags
+  tf-safe list --search "aws_instance" # Search for backups containing text`,
 	RunE: runListCommand,
 }
 
 func init() {
 	rootCmd.AddCommand(listCmd)
-	
+
 	// Add list-specific flags
 	listCmd.Flags().StringP("format", "f", "table", "Output format (table, json, yaml)")
 	listCmd.Flags().StringP("storage", "s", "all", "Filter by storage backend (local, remote, all)")
+	listCmd.Flags().String("tags", "", "Filter by tags (key1=value1,key2=value2)")
+	listCmd.Flags().String("search", "", "Search for text in backup state files")
 	listCmd.Flags().Int("limit", 0, "Limit number of results (0 = no limit)")
 }
 
@@ -54,6 +59,14 @@ func runListCommand(cmd *cobra.Command, args []string) error {
 	limit, err := cmd.Flags().GetInt("limit")
 	if err != nil {
 		return fmt.Errorf("failed to get limit flag: %w", err)
+	}
+	tagsStr, err := cmd.Flags().GetString("tags")
+	if err != nil {
+		return fmt.Errorf("failed to get tags flag: %w", err)
+	}
+	searchStr, err := cmd.Flags().GetString("search")
+	if err != nil {
+		return fmt.Errorf("failed to get search flag: %w", err)
 	}
 	verbose, err := cmd.Flags().GetBool("verbose")
 	if err != nil {
@@ -92,7 +105,7 @@ func runListCommand(cmd *cobra.Command, args []string) error {
 
 	// Create storage backend
 	localStorage := storage.NewLocalStorage(cfg.Local, logger)
-	
+
 	// Initialize storage backend
 	ctx := context.Background()
 	if err := localStorage.Initialize(ctx); err != nil {
@@ -103,9 +116,35 @@ func runListCommand(cmd *cobra.Command, args []string) error {
 	backupEngine := backup.NewEngine(localStorage, cfg, logger)
 
 	// List backups
-	backups, err := backupEngine.ListBackups(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to list backups: %w", err)
+	var backups []*types.BackupMetadata
+
+	// If we have tag or search filters, use search engine
+	if tagsStr != "" || searchStr != "" {
+		searchEngine := backup.NewSearchEngine(backupEngine)
+
+		// Parse tags filter
+		var tagFilter types.Tags
+		if tagsStr != "" {
+			tagFilter, err = types.ParseTagString(tagsStr)
+			if err != nil {
+				return fmt.Errorf("invalid tags format: %w", err)
+			}
+		}
+
+		// Perform search
+		backups, err = searchEngine.Search(ctx, backup.SearchOptions{
+			Tags:          tagFilter,
+			SearchContent: searchStr,
+			Limit:         limit,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to search backups: %w", err)
+		}
+	} else {
+		backups, err = backupEngine.ListBackups(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list backups: %w", err)
+		}
 	}
 
 	// Filter by storage type
@@ -121,8 +160,8 @@ func runListCommand(cmd *cobra.Command, args []string) error {
 		backups = filteredBackups
 	}
 
-	// Apply limit
-	if limit > 0 && len(backups) > limit {
+	// Apply limit (if not already applied by search)
+	if tagsStr == "" && searchStr == "" && limit > 0 && len(backups) > limit {
 		backups = backups[:limit]
 	}
 
@@ -144,33 +183,31 @@ func displayTable(backups []*types.BackupMetadata) error {
 	}
 
 	// Print header
-	fmt.Printf("%-35s %-20s %-10s %-10s %-10s %-10s\n", 
-		"BACKUP ID", "TIMESTAMP", "SIZE", "STORAGE", "ENCRYPTED", "CHECKSUM")
-	fmt.Printf("%-35s %-20s %-10s %-10s %-10s %-10s\n", 
-		strings.Repeat("-", 35), strings.Repeat("-", 20), strings.Repeat("-", 10), 
-		strings.Repeat("-", 10), strings.Repeat("-", 10), strings.Repeat("-", 10))
+	fmt.Printf("%-40s %-20s %-10s %-25s %-10s\n",
+		"BACKUP ID", "TIMESTAMP", "SIZE", "TAGS", "STORAGE")
+	fmt.Printf("%-40s %-20s %-10s %-25s %-10s\n",
+		strings.Repeat("-", 40), strings.Repeat("-", 20), strings.Repeat("-", 10),
+		strings.Repeat("-", 25), strings.Repeat("-", 10))
 
 	// Print backup rows
 	for _, backup := range backups {
-		encrypted := "No"
-		if backup.Encrypted {
-			encrypted = "Yes"
-		}
-
 		// Format size
 		sizeStr := formatSize(backup.Size)
-		
+
 		// Format timestamp
 		timestampStr := backup.Timestamp.Format("2006-01-02 15:04:05")
-		
-		// Truncate checksum for display
-		checksumStr := backup.Checksum
-		if len(checksumStr) > 10 {
-			checksumStr = checksumStr[:8] + ".."
+
+		// Format tags
+		tagsStr := "<none>"
+		if len(backup.Tags) > 0 {
+			tagsStr = backup.Tags.String()
+			if len(tagsStr) > 23 {
+				tagsStr = tagsStr[:20] + "..."
+			}
 		}
 
-		fmt.Printf("%-35s %-20s %-10s %-10s %-10s %-10s\n",
-			backup.ID, timestampStr, sizeStr, backup.StorageType, encrypted, checksumStr)
+		fmt.Printf("%-40s %-20s %-10s %-25s %-10s\n",
+			backup.ID, timestampStr, sizeStr, tagsStr, backup.StorageType)
 	}
 
 	fmt.Printf("\nTotal: %d backup(s)\n", len(backups))
@@ -187,7 +224,7 @@ func displayJSON(backups []*types.BackupMetadata) error {
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Println(string(data))
 	return nil
 }
@@ -202,7 +239,7 @@ func displayYAML(backups []*types.BackupMetadata) error {
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Print(string(data))
 	return nil
 }

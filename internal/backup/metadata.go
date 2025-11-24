@@ -29,7 +29,7 @@ func NewMetadataManager(backupDir string, logger *utils.Logger) *MetadataManager
 // LoadIndex loads the backup index from disk
 func (mm *MetadataManager) LoadIndex() (*types.BackupIndex, error) {
 	indexPath := filepath.Join(mm.backupDir, "index.json")
-	
+
 	if !utils.FileExists(indexPath) {
 		// Return empty index if file doesn't exist
 		return &types.BackupIndex{
@@ -54,10 +54,10 @@ func (mm *MetadataManager) LoadIndex() (*types.BackupIndex, error) {
 // SaveIndex saves the backup index to disk
 func (mm *MetadataManager) SaveIndex(index *types.BackupIndex) error {
 	indexPath := filepath.Join(mm.backupDir, "index.json")
-	
+
 	// Update last sync time
 	index.LastSync = time.Now()
-	
+
 	// Marshal index to JSON
 	data, err := json.MarshalIndent(index, "", "  ")
 	if err != nil {
@@ -81,7 +81,7 @@ func (mm *MetadataManager) AddBackup(metadata *types.BackupMetadata) error {
 	}
 
 	index.Backups[metadata.ID] = metadata
-	
+
 	if err := mm.SaveIndex(index); err != nil {
 		return fmt.Errorf("failed to save index: %w", err)
 	}
@@ -98,7 +98,7 @@ func (mm *MetadataManager) RemoveBackup(backupID string) error {
 	}
 
 	delete(index.Backups, backupID)
-	
+
 	if err := mm.SaveIndex(index); err != nil {
 		return fmt.Errorf("failed to save index: %w", err)
 	}
@@ -194,16 +194,16 @@ func (mm *MetadataManager) ValidateIndex() error {
 		mm.logger.Warn("Found %d backup files not in index - consider rebuilding index", len(missingFiles))
 	}
 
-	mm.logger.Debug("Index validation complete: %d orphaned entries cleaned, %d missing files found", 
+	mm.logger.Debug("Index validation complete: %d orphaned entries cleaned, %d missing files found",
 		len(orphanedEntries), len(missingFiles))
-	
+
 	return nil
 }
 
 // RebuildIndex rebuilds the backup index from existing backup files
 func (mm *MetadataManager) RebuildIndex() error {
 	mm.logger.Info("Rebuilding backup index from existing files")
-	
+
 	entries, err := os.ReadDir(mm.backupDir)
 	if err != nil {
 		return fmt.Errorf("failed to read backup directory: %w", err)

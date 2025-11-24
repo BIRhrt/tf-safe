@@ -68,7 +68,7 @@ func (m *MockConfigManager) CreateDefault() *types.Config {
 
 // MockBackupEngine implements BackupEngine for testing
 type MockBackupEngine struct {
-	backups []*types.BackupMetadata
+	backups    []*types.BackupMetadata
 	shouldFail bool
 }
 
@@ -82,11 +82,11 @@ func (m *MockBackupEngine) CreateBackup(ctx context.Context, opts types.BackupOp
 	if m.shouldFail {
 		return nil, &types.TfSafeError{Code: "BACKUP_ERROR", Message: "Mock backup failure"}
 	}
-	
+
 	metadata := &types.BackupMetadata{
-		ID:        "test-backup-id",
-		Size:      100,
-		Checksum:  "test-checksum",
+		ID:       "test-backup-id",
+		Size:     100,
+		Checksum: "test-checksum",
 	}
 	m.backups = append(m.backups, metadata)
 	return metadata, nil
@@ -110,7 +110,7 @@ func (m *MockBackupEngine) GetBackupMetadata(ctx context.Context, backupID strin
 	if m.shouldFail {
 		return nil, &types.TfSafeError{Code: "BACKUP_ERROR", Message: "Mock backup failure"}
 	}
-	
+
 	for _, backup := range m.backups {
 		if backup.ID == backupID {
 			return backup, nil
@@ -123,7 +123,7 @@ func (m *MockBackupEngine) ValidateBackup(ctx context.Context, backupID string) 
 	if m.shouldFail {
 		return &types.TfSafeError{Code: "BACKUP_ERROR", Message: "Mock backup failure"}
 	}
-	
+
 	for _, backup := range m.backups {
 		if backup.ID == backupID {
 			return nil
@@ -225,7 +225,7 @@ func TestWrapper_DetectStateFile_MultipleStateFiles(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unexpected error detecting single state file: %v", err)
 	}
-	
+
 	if detectedFile == "" {
 		t.Error("Expected to detect terraform.tfstate file")
 	}
@@ -287,7 +287,7 @@ func TestWrapper_CheckTerraformBinary(t *testing.T) {
 	// Note: This test will only pass if terraform is installed on the system
 	// In a real CI environment, you might want to mock this or skip the test
 	err := wrapper.CheckTerraformBinary()
-	
+
 	// We can't guarantee terraform is installed in all test environments
 	// So we'll just verify the method doesn't panic and returns some result
 	if err != nil {
@@ -304,7 +304,7 @@ func TestWrapper_GetTerraformVersion(t *testing.T) {
 
 	// Note: This test will only pass if terraform is installed on the system
 	version, err := wrapper.GetTerraformVersion()
-	
+
 	if err != nil {
 		t.Logf("Terraform version check failed (expected in environments without terraform): %v", err)
 	} else {
@@ -322,17 +322,17 @@ func TestWrapper_AddHook(t *testing.T) {
 
 	// Create a mock hook
 	mockHook := &MockCommandHook{}
-	
+
 	// Test adding hook
 	wrapper.AddHook(mockHook)
-	
+
 	if len(wrapper.hooks) != 1 {
 		t.Errorf("Expected 1 hook after adding, got %d", len(wrapper.hooks))
 	}
-	
+
 	// Add another hook
 	wrapper.AddHook(mockHook)
-	
+
 	if len(wrapper.hooks) != 2 {
 		t.Errorf("Expected 2 hooks after adding second, got %d", len(wrapper.hooks))
 	}

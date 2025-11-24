@@ -65,18 +65,18 @@ func TestFactory_CreateFromConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			provider, err := factory.CreateFromConfig(ctx, tt.config)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Error("Expected error but got none")
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
-			
+
 			if provider == nil {
 				t.Error("Expected provider but got nil")
 			}

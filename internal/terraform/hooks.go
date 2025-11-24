@@ -139,12 +139,12 @@ func (h *BackupHook) PostExecute(ctx context.Context, cmd string, args []string,
 func (h *BackupHook) OnError(ctx context.Context, cmd string, args []string, err error) error {
 	// Log the error but don't fail the operation
 	fmt.Fprintf(os.Stderr, "Terraform command failed: %v\n", err)
-	
+
 	// Could implement additional error handling here, such as:
 	// - Creating an error backup
 	// - Sending notifications
 	// - Rolling back changes
-	
+
 	return nil
 }
 

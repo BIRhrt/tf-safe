@@ -181,11 +181,11 @@ func TestConfigurationValidation(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := manager.Validate(tc.config)
-			
+
 			if tc.expectError && err == nil {
 				t.Errorf("%s: Expected validation error but got none", tc.description)
 			}
-			
+
 			if !tc.expectError && err != nil {
 				t.Errorf("%s: Unexpected validation error: %v", tc.description, err)
 			}

@@ -194,7 +194,7 @@ func TestMultipleBackupsRetention(t *testing.T) {
 	// This test verifies that the retention policy logic works correctly
 	// by testing the retention manager directly rather than creating actual backups
 	// which would require long delays to ensure unique timestamps
-	
+
 	config := types.RetentionConfig{
 		LocalCount: 4, // Keep 4 backups (> minimum of 3)
 	}
@@ -213,7 +213,7 @@ func TestMultipleBackupsRetention(t *testing.T) {
 			Size:      100,
 		},
 		{
-			ID:        "backup-2", 
+			ID:        "backup-2",
 			Timestamp: now.Add(-5 * time.Hour),
 			Size:      100,
 		},

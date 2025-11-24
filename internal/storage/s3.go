@@ -61,7 +61,7 @@ func (s3s *S3Storage) Initialize(ctx context.Context) error {
 		return fmt.Errorf("S3 validation failed: %w", err)
 	}
 
-	s3s.logger.Info("S3 storage initialized for bucket %s in region %s", 
+	s3s.logger.Info("S3 storage initialized for bucket %s in region %s",
 		s3s.config.Bucket, s3s.config.Region)
 	return nil
 }
@@ -69,7 +69,7 @@ func (s3s *S3Storage) Initialize(ctx context.Context) error {
 // Store saves backup data to S3
 func (s3s *S3Storage) Store(ctx context.Context, key string, data []byte, metadata *tftypes.BackupMetadata) error {
 	s3Key := s3s.buildS3Key(key)
-	
+
 	// Calculate checksum if not provided
 	if metadata.Checksum == "" {
 		metadata.Checksum = utils.CalculateChecksumBytes(data)
@@ -82,11 +82,11 @@ func (s3s *S3Storage) Store(ctx context.Context, key string, data []byte, metada
 
 	// Prepare S3 metadata
 	s3Metadata := map[string]string{
-		S3MetadataPrefix + "id":          metadata.ID,
-		S3MetadataPrefix + "timestamp":   metadata.Timestamp.Format(time.RFC3339),
-		S3MetadataPrefix + "checksum":    metadata.Checksum,
-		S3MetadataPrefix + "encrypted":   fmt.Sprintf("%t", metadata.Encrypted),
-		S3MetadataPrefix + "size":        fmt.Sprintf("%d", metadata.Size),
+		S3MetadataPrefix + "id":        metadata.ID,
+		S3MetadataPrefix + "timestamp": metadata.Timestamp.Format(time.RFC3339),
+		S3MetadataPrefix + "checksum":  metadata.Checksum,
+		S3MetadataPrefix + "encrypted": fmt.Sprintf("%t", metadata.Encrypted),
+		S3MetadataPrefix + "size":      fmt.Sprintf("%d", metadata.Size),
 	}
 
 	// Use multipart upload for large files
@@ -105,27 +105,27 @@ func (s3s *S3Storage) Retrieve(ctx context.Context, key string) ([]byte, *tftype
 	// Get object with retry logic
 	var getOutput *s3.GetObjectOutput
 	var err error
-	
+
 	for attempt := 0; attempt < S3MaxRetries; attempt++ {
 		getOutput, err = s3s.client.GetObject(ctx, &s3.GetObjectInput{
 			Bucket: aws.String(s3s.config.Bucket),
 			Key:    aws.String(s3Key),
 		})
-		
+
 		if err == nil {
 			break
 		}
-		
+
 		if attempt < S3MaxRetries-1 {
 			delay := time.Duration(attempt+1) * S3RetryDelay
-			s3s.logger.Warn("S3 GetObject attempt %d failed, retrying in %v: %v", 
+			s3s.logger.Warn("S3 GetObject attempt %d failed, retrying in %v: %v",
 				attempt+1, delay, err)
 			time.Sleep(delay)
 		}
 	}
-	
+
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to retrieve object from S3 after %d attempts: %w", 
+		return nil, nil, fmt.Errorf("failed to retrieve object from S3 after %d attempts: %w",
 			S3MaxRetries, err)
 	}
 	defer func() {
@@ -149,7 +149,7 @@ func (s3s *S3Storage) Retrieve(ctx context.Context, key string) ([]byte, *tftype
 	// Validate checksum
 	actualChecksum := utils.CalculateChecksumBytes(data)
 	if actualChecksum != metadata.Checksum {
-		return nil, nil, fmt.Errorf("checksum mismatch for backup %s: expected %s, got %s", 
+		return nil, nil, fmt.Errorf("checksum mismatch for backup %s: expected %s, got %s",
 			key, metadata.Checksum, actualChecksum)
 	}
 
@@ -165,27 +165,27 @@ func (s3s *S3Storage) List(ctx context.Context) ([]*tftypes.BackupMetadata, erro
 	// List objects with retry logic
 	var listOutput *s3.ListObjectsV2Output
 	var err error
-	
+
 	for attempt := 0; attempt < S3MaxRetries; attempt++ {
 		listOutput, err = s3s.client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 			Bucket: aws.String(s3s.config.Bucket),
 			Prefix: aws.String(prefix),
 		})
-		
+
 		if err == nil {
 			break
 		}
-		
+
 		if attempt < S3MaxRetries-1 {
 			delay := time.Duration(attempt+1) * S3RetryDelay
-			s3s.logger.Warn("S3 ListObjectsV2 attempt %d failed, retrying in %v: %v", 
+			s3s.logger.Warn("S3 ListObjectsV2 attempt %d failed, retrying in %v: %v",
 				attempt+1, delay, err)
 			time.Sleep(delay)
 		}
 	}
-	
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to list S3 objects after %d attempts: %w", 
+		return nil, fmt.Errorf("failed to list S3 objects after %d attempts: %w",
 			S3MaxRetries, err)
 	}
 
@@ -247,21 +247,21 @@ func (s3s *S3Storage) Delete(ctx context.Context, key string) error {
 			Bucket: aws.String(s3s.config.Bucket),
 			Key:    aws.String(s3Key),
 		})
-		
+
 		if err == nil {
 			break
 		}
-		
+
 		if attempt < S3MaxRetries-1 {
 			delay := time.Duration(attempt+1) * S3RetryDelay
-			s3s.logger.Warn("S3 DeleteObject attempt %d failed, retrying in %v: %v", 
+			s3s.logger.Warn("S3 DeleteObject attempt %d failed, retrying in %v: %v",
 				attempt+1, delay, err)
 			time.Sleep(delay)
 		}
 	}
-	
+
 	if err != nil {
-		return fmt.Errorf("failed to delete S3 object after %d attempts: %w", 
+		return fmt.Errorf("failed to delete S3 object after %d attempts: %w",
 			S3MaxRetries, err)
 	}
 
@@ -280,27 +280,27 @@ func (s3s *S3Storage) Exists(ctx context.Context, key string) (bool, error) {
 			Bucket: aws.String(s3s.config.Bucket),
 			Key:    aws.String(s3Key),
 		})
-		
+
 		if err == nil {
 			return true, nil
 		}
-		
+
 		// Check if it's a "not found" error
 		var noSuchKey *s3types.NoSuchKey
 		var notFound *s3types.NotFound
 		if errors.As(err, &noSuchKey) || errors.As(err, &notFound) {
 			return false, nil
 		}
-		
+
 		if attempt < S3MaxRetries-1 {
 			delay := time.Duration(attempt+1) * S3RetryDelay
-			s3s.logger.Warn("S3 HeadObject attempt %d failed, retrying in %v: %v", 
+			s3s.logger.Warn("S3 HeadObject attempt %d failed, retrying in %v: %v",
 				attempt+1, delay, err)
 			time.Sleep(delay)
 		}
 	}
-	
-	return false, fmt.Errorf("failed to check S3 object existence after %d attempts: %w", 
+
+	return false, fmt.Errorf("failed to check S3 object existence after %d attempts: %w",
 		S3MaxRetries, err)
 }
 
@@ -329,7 +329,7 @@ func (s3s *S3Storage) validateS3Access(ctx context.Context) error {
 	// Test write permissions by creating a test object
 	testKey := s3s.buildS3Key("test-connectivity")
 	testData := []byte("tf-safe connectivity test")
-	
+
 	_, err = s3s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s3s.config.Bucket),
 		Key:    aws.String(testKey),
@@ -366,12 +366,12 @@ func (s3s *S3Storage) extractBackupKey(s3Key string) string {
 	if s3s.config.Prefix != "" && strings.HasPrefix(key, s3s.config.Prefix) {
 		key = strings.TrimPrefix(key, s3s.config.Prefix)
 	}
-	
+
 	// Remove backup file extension
 	if strings.HasSuffix(key, BackupFileExtension) {
 		key = strings.TrimSuffix(key, BackupFileExtension)
 	}
-	
+
 	return key
 }
 
@@ -416,21 +416,21 @@ func (s3s *S3Storage) regularUpload(ctx context.Context, s3Key string, data []by
 			Body:     bytes.NewReader(data),
 			Metadata: s3Metadata,
 		})
-		
+
 		if err == nil {
-			s3s.logger.Info("Backup stored successfully in S3: %s (size: %d bytes)", 
+			s3s.logger.Info("Backup stored successfully in S3: %s (size: %d bytes)",
 				s3Key, len(data))
 			return nil
 		}
-		
+
 		if attempt < S3MaxRetries-1 {
 			delay := time.Duration(attempt+1) * S3RetryDelay
-			s3s.logger.Warn("S3 PutObject attempt %d failed, retrying in %v: %v", 
+			s3s.logger.Warn("S3 PutObject attempt %d failed, retrying in %v: %v",
 				attempt+1, delay, err)
 			time.Sleep(delay)
 		}
 	}
-	
+
 	return fmt.Errorf("failed to upload to S3 after %d attempts: %w", S3MaxRetries, err)
 }
 
@@ -448,19 +448,19 @@ func (s3s *S3Storage) multipartUpload(ctx context.Context, s3Key string, data []
 
 	uploadID := createOutput.UploadId
 	var completedParts []s3types.CompletedPart
-	
+
 	// Upload parts
 	partSize := S3MultipartThreshold
 	partNumber := int32(1)
-	
+
 	for offset := 0; offset < len(data); offset += partSize {
 		end := offset + partSize
 		if end > len(data) {
 			end = len(data)
 		}
-		
+
 		partData := data[offset:end]
-		
+
 		uploadOutput, err := s3s.client.UploadPart(ctx, &s3.UploadPartInput{
 			Bucket:     aws.String(s3s.config.Bucket),
 			Key:        aws.String(s3Key),
@@ -477,15 +477,15 @@ func (s3s *S3Storage) multipartUpload(ctx context.Context, s3Key string, data []
 			})
 			return fmt.Errorf("failed to upload part %d: %w", partNumber, err)
 		}
-		
+
 		completedParts = append(completedParts, s3types.CompletedPart{
 			ETag:       uploadOutput.ETag,
 			PartNumber: &partNumber,
 		})
-		
+
 		partNumber++
 	}
-	
+
 	// Complete multipart upload
 	_, err = s3s.client.CompleteMultipartUpload(ctx, &s3.CompleteMultipartUploadInput{
 		Bucket:   aws.String(s3s.config.Bucket),
@@ -504,8 +504,8 @@ func (s3s *S3Storage) multipartUpload(ctx context.Context, s3Key string, data []
 		})
 		return fmt.Errorf("failed to complete multipart upload: %w", err)
 	}
-	
-	s3s.logger.Info("Backup stored successfully in S3 using multipart upload: %s (size: %d bytes)", 
+
+	s3s.logger.Info("Backup stored successfully in S3 using multipart upload: %s (size: %d bytes)",
 		s3Key, len(data))
 	return nil
 }

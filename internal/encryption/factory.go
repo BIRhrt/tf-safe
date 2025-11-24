@@ -58,7 +58,7 @@ func (f *Factory) CreateFromConfig(ctx context.Context, config types.EncryptionC
 		if region == "" {
 			region = "us-east-1" // Default region
 		}
-		
+
 		provider, err := f.CreateKMS(config.KMSKeyID, region)
 		if err != nil {
 			return nil, err
@@ -106,7 +106,7 @@ func extractRegionFromKMSKey(keyID string) string {
 		if start < len(keyID) {
 			parts = append(parts, keyID[start:])
 		}
-		
+
 		// ARN format: arn:aws:kms:region:account:key/key-id
 		// parts[0] = "arn", parts[1] = "aws", parts[2] = "kms", parts[3] = "region"
 		if len(parts) >= 4 {

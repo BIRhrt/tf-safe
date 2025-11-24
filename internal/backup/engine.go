@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"tf-safe/internal/audit"
+	"tf-safe/internal/notifications"
 	"tf-safe/internal/storage"
 	"tf-safe/internal/utils"
 	"tf-safe/pkg/types"
@@ -26,6 +28,8 @@ type Engine struct {
 	remoteStorage storage.StorageBackend
 	config        *types.Config
 	logger        *utils.Logger
+	notifier      *notifications.Manager
+	auditLogger   *audit.Logger
 }
 
 // NewEngine creates a new backup engine
@@ -34,6 +38,8 @@ func NewEngine(localStorage storage.StorageBackend, config *types.Config, logger
 		localStorage: localStorage,
 		config:       config,
 		logger:       logger,
+		notifier:     notifications.NewManager(config.Notifications, logger),
+		auditLogger:  audit.NewLogger(config.Audit),
 	}
 }
 
@@ -44,6 +50,8 @@ func NewEngineWithRemote(localStorage, remoteStorage storage.StorageBackend, con
 		remoteStorage: remoteStorage,
 		config:        config,
 		logger:        logger,
+		notifier:      notifications.NewManager(config.Notifications, logger),
+		auditLogger:   audit.NewLogger(config.Audit),
 	}
 }
 
@@ -55,6 +63,8 @@ func (e *Engine) CreateBackup(ctx context.Context, opts types.BackupOptions) (*t
 		var err error
 		stateFilePath, err = e.detectStateFile()
 		if err != nil {
+			e.notifier.NotifyBackupFailed(err)
+			e.auditLogger.Log(types.AuditActionBackupCreate, types.AuditStatusFailed, nil, err)
 			return nil, fmt.Errorf("failed to detect state file: %w", err)
 		}
 	}
@@ -62,7 +72,10 @@ func (e *Engine) CreateBackup(ctx context.Context, opts types.BackupOptions) (*t
 	// Check if state file exists
 	if !utils.FileExists(stateFilePath) {
 		if !opts.Force {
-			return nil, fmt.Errorf("state file not found: %s", stateFilePath)
+			err := fmt.Errorf("state file not found: %s", stateFilePath)
+			e.notifier.NotifyBackupFailed(err)
+			e.auditLogger.Log(types.AuditActionBackupCreate, types.AuditStatusFailed, map[string]interface{}{"file": stateFilePath}, err)
+			return nil, err
 		}
 		e.logger.Warn("State file not found, creating empty backup: %s", stateFilePath)
 	}
@@ -73,6 +86,8 @@ func (e *Engine) CreateBackup(ctx context.Context, opts types.BackupOptions) (*t
 	if utils.FileExists(stateFilePath) {
 		stateData, err = os.ReadFile(stateFilePath)
 		if err != nil {
+			e.notifier.NotifyBackupFailed(err)
+			e.auditLogger.Log(types.AuditActionBackupCreate, types.AuditStatusFailed, map[string]interface{}{"file": stateFilePath}, err)
 			return nil, fmt.Errorf("failed to read state file %s: %w", stateFilePath, err)
 		}
 	}
@@ -89,10 +104,14 @@ func (e *Engine) CreateBackup(ctx context.Context, opts types.BackupOptions) (*t
 		StorageType: e.localStorage.GetType(),
 		Encrypted:   false, // Will be set by encryption layer if enabled
 		FilePath:    stateFilePath,
+		Tags:        opts.Tags,        // Add tags from options
+		Description: opts.Description, // Add description from options
 	}
 
 	// Store backup using local storage backend
 	if err := e.localStorage.Store(ctx, backupID, stateData, metadata); err != nil {
+		e.notifier.NotifyBackupFailed(err)
+		e.auditLogger.Log(types.AuditActionBackupCreate, types.AuditStatusFailed, map[string]interface{}{"backup_id": backupID}, err)
 		return nil, fmt.Errorf("failed to store backup locally: %w", err)
 	}
 
@@ -110,6 +129,12 @@ func (e *Engine) CreateBackup(ctx context.Context, opts types.BackupOptions) (*t
 	}
 
 	e.logger.Info("Backup created successfully: %s from %s", backupID, stateFilePath)
+	e.notifier.NotifyBackupSuccess(backupID, metadata.Size)
+	e.auditLogger.Log(types.AuditActionBackupCreate, types.AuditStatusSuccess, map[string]interface{}{
+		"backup_id": backupID,
+		"size":      metadata.Size,
+		"file":      stateFilePath,
+	}, nil)
 	return metadata, nil
 }
 
@@ -223,6 +248,10 @@ func (e *Engine) cleanupLocalBackups(ctx context.Context) (int, error) {
 		deletedCount++
 		e.logger.Info("Deleted old local backup: %s (timestamp: %s)",
 			backup.ID, backup.Timestamp.Format(time.RFC3339))
+		e.auditLogger.Log(types.AuditActionPrune, types.AuditStatusSuccess, map[string]interface{}{
+			"backup_id": backup.ID,
+			"reason":    "local_retention_policy",
+		}, nil)
 	}
 
 	return deletedCount, nil
@@ -253,6 +282,10 @@ func (e *Engine) cleanupRemoteBackups(ctx context.Context) (int, error) {
 		deletedCount++
 		e.logger.Info("Deleted old remote backup: %s (timestamp: %s)",
 			backup.ID, backup.Timestamp.Format(time.RFC3339))
+		e.auditLogger.Log(types.AuditActionPrune, types.AuditStatusSuccess, map[string]interface{}{
+			"backup_id": backup.ID,
+			"reason":    "remote_retention_policy",
+		}, nil)
 	}
 
 	return deletedCount, nil

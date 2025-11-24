@@ -46,9 +46,9 @@ func (rm *RetentionManagerImpl) ApplyRetentionPolicy(ctx context.Context, backup
 // applyRetentionPolicy applies retention policies to remove old backups
 func (rm *RetentionManagerImpl) applyRetentionPolicy(ctx context.Context, backups []*types.BackupMetadata, retentionCount int, storageType string) ([]*types.BackupMetadata, error) {
 	rm.logger.Info("Starting %s retention policy analysis for %d backups", storageType, len(backups))
-	
+
 	if len(backups) <= MinimumRetentionCount {
-		rm.logger.Info("Backup count (%d) is at or below minimum retention count (%d), no cleanup needed", 
+		rm.logger.Info("Backup count (%d) is at or below minimum retention count (%d), no cleanup needed",
 			len(backups), MinimumRetentionCount)
 		return nil, nil
 	}
@@ -63,7 +63,7 @@ func (rm *RetentionManagerImpl) applyRetentionPolicy(ctx context.Context, backup
 	var toDelete []*types.BackupMetadata
 	now := time.Now()
 
-	rm.logger.Debug("%s retention configuration: Count=%d, MaxAgeDays=%d, MinimumCount=%d", 
+	rm.logger.Debug("%s retention configuration: Count=%d, MaxAgeDays=%d, MinimumCount=%d",
 		storageType, retentionCount, rm.config.MaxAgeDays, MinimumRetentionCount)
 
 	// Apply count-based retention
@@ -74,7 +74,7 @@ func (rm *RetentionManagerImpl) applyRetentionPolicy(ctx context.Context, backup
 			backup := sortedBackups[i]
 			if len(sortedBackups)-len(toDelete) > MinimumRetentionCount {
 				toDelete = append(toDelete, backup)
-				rm.logger.Debug("Marking backup for deletion (count policy): %s (timestamp: %s)", 
+				rm.logger.Debug("Marking backup for deletion (count policy): %s (timestamp: %s)",
 					backup.ID, backup.Timestamp.Format(time.RFC3339))
 			}
 		}
@@ -84,7 +84,7 @@ func (rm *RetentionManagerImpl) applyRetentionPolicy(ctx context.Context, backup
 	if rm.config.MaxAgeDays > 0 {
 		maxAge := time.Duration(rm.config.MaxAgeDays) * 24 * time.Hour
 		rm.logger.Debug("Applying age-based retention: max age %v", maxAge)
-		
+
 		for _, backup := range sortedBackups {
 			if rm.shouldDeleteByAge(backup, now) {
 				// Only delete if we're not already marking it for deletion and we maintain minimum count
@@ -95,11 +95,11 @@ func (rm *RetentionManagerImpl) applyRetentionPolicy(ctx context.Context, backup
 						break
 					}
 				}
-				
+
 				if !alreadyMarked && len(sortedBackups)-len(toDelete) > MinimumRetentionCount {
 					toDelete = append(toDelete, backup)
 					age := now.Sub(backup.Timestamp)
-					rm.logger.Debug("Marking backup for deletion (age policy): %s (age: %v, max: %v)", 
+					rm.logger.Debug("Marking backup for deletion (age policy): %s (age: %v, max: %v)",
 						backup.ID, age, maxAge)
 				}
 			}
@@ -112,7 +112,7 @@ func (rm *RetentionManagerImpl) applyRetentionPolicy(ctx context.Context, backup
 		sort.Slice(toDelete, func(i, j int) bool {
 			return toDelete[i].Timestamp.Before(toDelete[j].Timestamp)
 		})
-		
+
 		// Keep enough to maintain minimum count
 		keepCount := MinimumRetentionCount - (len(sortedBackups) - len(toDelete))
 		if keepCount > 0 && keepCount < len(toDelete) {
@@ -124,9 +124,9 @@ func (rm *RetentionManagerImpl) applyRetentionPolicy(ctx context.Context, backup
 		}
 	}
 
-	rm.logger.Info("Retention policy analysis complete: %d total backups, %d marked for deletion, %d will remain", 
+	rm.logger.Info("Retention policy analysis complete: %d total backups, %d marked for deletion, %d will remain",
 		len(backups), len(toDelete), len(backups)-len(toDelete))
-	
+
 	// Log details of backups to be deleted
 	if len(toDelete) > 0 {
 		rm.logger.Info("Backups scheduled for deletion:")
@@ -135,7 +135,7 @@ func (rm *RetentionManagerImpl) applyRetentionPolicy(ctx context.Context, backup
 			rm.logger.Info("  - %s (age: %v, size: %d bytes)", backup.ID, age, backup.Size)
 		}
 	}
-	
+
 	return toDelete, nil
 }
 
@@ -167,6 +167,6 @@ func (rm *RetentionManagerImpl) shouldDeleteByAge(backup *types.BackupMetadata, 
 
 	maxAge := time.Duration(rm.config.MaxAgeDays) * 24 * time.Hour
 	age := now.Sub(backup.Timestamp)
-	
+
 	return age > maxAge
 }

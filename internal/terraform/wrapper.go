@@ -149,7 +149,7 @@ func (w *Wrapper) GetTerraformVersion() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to get terraform version: %w", err)
 		}
-		
+
 		// Parse plain text version output
 		versionRegex := regexp.MustCompile(`Terraform v(\d+\.\d+\.\d+)`)
 		matches := versionRegex.FindStringSubmatch(string(output))

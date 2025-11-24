@@ -109,24 +109,24 @@ func DefaultCommandsConfig() types.CommandsConfig {
 // Constants for configuration values
 const (
 	// Default paths
-	DefaultLocalPath     = ".tfstate_snapshots"
-	DefaultConfigFile    = ".tf-safe.yaml"
-	DefaultGlobalConfig  = "~/.tf-safe/config.yaml"
-	
+	DefaultLocalPath    = ".tfstate_snapshots"
+	DefaultConfigFile   = ".tf-safe.yaml"
+	DefaultGlobalConfig = "~/.tf-safe/config.yaml"
+
 	// Default retention values
-	MinRetentionCount    = 3
-	DefaultLocalRetention = 10
+	MinRetentionCount      = 3
+	DefaultLocalRetention  = 10
 	DefaultRemoteRetention = 50
-	DefaultMaxAgeDays    = 90
-	
+	DefaultMaxAgeDays      = 90
+
 	// Default encryption
 	DefaultEncryptionProvider = "aes"
-	
+
 	// Default logging
-	DefaultLogLevel      = "info"
-	DefaultLogFormat     = "text"
-	
+	DefaultLogLevel  = "info"
+	DefaultLogFormat = "text"
+
 	// Default remote storage
-	DefaultS3Region      = "us-west-2"
+	DefaultS3Region       = "us-west-2"
 	DefaultRemoteProvider = "s3"
 )

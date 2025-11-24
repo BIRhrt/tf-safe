@@ -36,17 +36,17 @@ func NewValidator() *Validator {
 // ValidateConfig performs comprehensive validation of the configuration
 func (v *Validator) ValidateConfig(config *types.Config) error {
 	v.errors = make([]ValidationError, 0)
-	
+
 	v.validateLocalConfig(config.Local)
 	v.validateRemoteConfig(config.Remote)
 	v.validateEncryptionConfig(config.Encryption)
 	v.validateRetentionConfig(config.Retention)
 	v.validateLoggingConfig(config.Logging)
-	
+
 	if len(v.errors) > 0 {
 		return v.buildValidationError()
 	}
-	
+
 	return nil
 }
 
@@ -61,7 +61,7 @@ func (v *Validator) validateLocalConfig(config types.LocalConfig) {
 			if !isValidPath(config.Path) {
 				v.addError("local.path", config.Path, "path contains invalid characters")
 			}
-			
+
 			// Check if we can create the directory
 			absPath, err := filepath.Abs(config.Path)
 			if err != nil {
@@ -76,10 +76,10 @@ func (v *Validator) validateLocalConfig(config types.LocalConfig) {
 				}
 			}
 		}
-		
+
 		// Validate retention count
 		if config.RetentionCount < MinRetentionCount {
-			v.addError("local.retention_count", config.RetentionCount, 
+			v.addError("local.retention_count", config.RetentionCount,
 				fmt.Sprintf("must be at least %d", MinRetentionCount))
 		}
 		if config.RetentionCount > 1000 {
@@ -94,17 +94,17 @@ func (v *Validator) validateRemoteConfig(config types.RemoteConfig) {
 		// Validate provider
 		validProviders := []string{"s3", "gcs", "azure"}
 		if !contains(validProviders, config.Provider) {
-			v.addError("remote.provider", config.Provider, 
+			v.addError("remote.provider", config.Provider,
 				fmt.Sprintf("must be one of: %s", strings.Join(validProviders, ", ")))
 		}
-		
+
 		// Validate bucket name
 		if config.Bucket == "" {
 			v.addError("remote.bucket", config.Bucket, "bucket name is required")
 		} else if !isValidBucketName(config.Bucket, config.Provider) {
 			v.addError("remote.bucket", config.Bucket, "invalid bucket name format")
 		}
-		
+
 		// Provider-specific validation
 		switch config.Provider {
 		case "s3":
@@ -119,7 +119,7 @@ func (v *Validator) validateRemoteConfig(config types.RemoteConfig) {
 				v.addError("remote.region", config.Region, "invalid GCP region format")
 			}
 		}
-		
+
 		// Validate prefix if provided
 		if config.Prefix != "" && !isValidPrefix(config.Prefix) {
 			v.addError("remote.prefix", config.Prefix, "invalid prefix format")
@@ -131,10 +131,10 @@ func (v *Validator) validateRemoteConfig(config types.RemoteConfig) {
 func (v *Validator) validateEncryptionConfig(config types.EncryptionConfig) {
 	validProviders := []string{"aes", "kms", "passphrase", "none"}
 	if !contains(validProviders, config.Provider) {
-		v.addError("encryption.provider", config.Provider, 
+		v.addError("encryption.provider", config.Provider,
 			fmt.Sprintf("must be one of: %s", strings.Join(validProviders, ", ")))
 	}
-	
+
 	switch config.Provider {
 	case "kms":
 		if config.KMSKeyID == "" {
@@ -154,20 +154,20 @@ func (v *Validator) validateEncryptionConfig(config types.EncryptionConfig) {
 // validateRetentionConfig validates retention configuration
 func (v *Validator) validateRetentionConfig(config types.RetentionConfig) {
 	if config.LocalCount < MinRetentionCount {
-		v.addError("retention.local_count", config.LocalCount, 
+		v.addError("retention.local_count", config.LocalCount,
 			fmt.Sprintf("must be at least %d", MinRetentionCount))
 	}
 	if config.LocalCount > 1000 {
 		v.addError("retention.local_count", config.LocalCount, "must not exceed 1000")
 	}
-	
+
 	if config.RemoteCount < 1 {
 		v.addError("retention.remote_count", config.RemoteCount, "must be at least 1")
 	}
 	if config.RemoteCount > 10000 {
 		v.addError("retention.remote_count", config.RemoteCount, "must not exceed 10000")
 	}
-	
+
 	if config.MaxAgeDays < 1 {
 		v.addError("retention.max_age_days", config.MaxAgeDays, "must be at least 1")
 	}
@@ -180,13 +180,13 @@ func (v *Validator) validateRetentionConfig(config types.RetentionConfig) {
 func (v *Validator) validateLoggingConfig(config types.LoggingConfig) {
 	validLevels := []string{"debug", "info", "warn", "error"}
 	if !contains(validLevels, config.Level) {
-		v.addError("logging.level", config.Level, 
+		v.addError("logging.level", config.Level,
 			fmt.Sprintf("must be one of: %s", strings.Join(validLevels, ", ")))
 	}
-	
+
 	validFormats := []string{"json", "text"}
 	if !contains(validFormats, config.Format) {
-		v.addError("logging.format", config.Format, 
+		v.addError("logging.format", config.Format,
 			fmt.Sprintf("must be one of: %s", strings.Join(validFormats, ", ")))
 	}
 }
@@ -259,24 +259,24 @@ func isValidS3BucketName(name string) bool {
 	if len(name) < 3 || len(name) > 63 {
 		return false
 	}
-	
+
 	// Must start and end with lowercase letter or number
 	matched, err := regexp.MatchString(`^[a-z0-9].*[a-z0-9]$`, name)
 	if err != nil || !matched {
 		return false
 	}
-	
+
 	// Can contain lowercase letters, numbers, hyphens, and periods
 	matched, err = regexp.MatchString(`^[a-z0-9.-]+$`, name)
 	if err != nil || !matched {
 		return false
 	}
-	
+
 	// Cannot contain consecutive periods or hyphens
 	if strings.Contains(name, "..") || strings.Contains(name, "--") {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -330,20 +330,20 @@ func isValidKMSKeyID(keyID string) bool {
 	// - Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 	// - Alias: alias/example-alias
 	// - Alias ARN: arn:aws:kms:us-west-2:111122223333:alias/example-alias
-	
+
 	patterns := []string{
-		`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`, // Key ID
+		`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`,                                      // Key ID
 		`^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`, // Key ARN
-		`^alias/[a-zA-Z0-9/_-]+$`, // Alias
+		`^alias/[a-zA-Z0-9/_-]+$`,                                  // Alias
 		`^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:alias/[a-zA-Z0-9/_-]+$`, // Alias ARN
 	}
-	
+
 	for _, pattern := range patterns {
 		matched, _ := regexp.MatchString(pattern, keyID)
 		if matched {
 			return true
 		}
 	}
-	
+
 	return false
 }

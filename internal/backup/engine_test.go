@@ -13,16 +13,16 @@ import (
 
 // MockStorageBackend implements StorageBackend for testing
 type MockStorageBackend struct {
-	backups map[string][]byte
-	metadata map[string]*types.BackupMetadata
+	backups     map[string][]byte
+	metadata    map[string]*types.BackupMetadata
 	storageType string
-	shouldFail bool
+	shouldFail  bool
 }
 
 func NewMockStorageBackend(storageType string) *MockStorageBackend {
 	return &MockStorageBackend{
-		backups: make(map[string][]byte),
-		metadata: make(map[string]*types.BackupMetadata),
+		backups:     make(map[string][]byte),
+		metadata:    make(map[string]*types.BackupMetadata),
 		storageType: storageType,
 	}
 }

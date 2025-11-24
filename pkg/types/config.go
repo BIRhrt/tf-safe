@@ -7,12 +7,14 @@ import (
 
 // Config represents the complete tf-safe configuration
 type Config struct {
-	Local      LocalConfig      `yaml:"local" validate:"required"`
-	Remote     RemoteConfig     `yaml:"remote"`
-	Encryption EncryptionConfig `yaml:"encryption"`
-	Retention  RetentionConfig  `yaml:"retention" validate:"required"`
-	Logging    LoggingConfig    `yaml:"logging"`
-	Commands   CommandsConfig   `yaml:"commands"`
+	Local         LocalConfig        `yaml:"local" validate:"required"`
+	Remote        RemoteConfig       `yaml:"remote"`
+	Encryption    EncryptionConfig   `yaml:"encryption"`
+	Retention     RetentionConfig    `yaml:"retention" validate:"required"`
+	Logging       LoggingConfig      `yaml:"logging"`
+	Commands      CommandsConfig     `yaml:"commands"`
+	Notifications NotificationConfig `yaml:"notifications"`
+	Audit         AuditConfig        `yaml:"audit"`
 }
 
 // LocalConfig configures local storage settings

@@ -37,7 +37,7 @@ func runPlanCommand(args []string) error {
 
 	// Initialize configuration manager
 	configManager := config.NewManager()
-	
+
 	// Load configuration
 	cfg, err := configManager.Load()
 	if err != nil {
@@ -49,7 +49,7 @@ func runPlanCommand(args []string) error {
 
 	// Initialize storage backend
 	storageBackend := storage.NewLocalStorage(cfg.Local, logger)
-	
+
 	// Initialize storage backend
 	if err := storageBackend.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize storage: %w", err)

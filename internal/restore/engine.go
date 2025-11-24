@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"tf-safe/internal/audit"
 	"tf-safe/internal/backup"
+	"tf-safe/internal/notifications"
 	"tf-safe/internal/storage"
 	"tf-safe/internal/utils"
 	"tf-safe/pkg/types"
@@ -18,6 +20,8 @@ type Engine struct {
 	backupEngine backup.BackupEngine
 	config       *types.Config
 	logger       *utils.Logger
+	notifier     *notifications.Manager
+	auditLogger  *audit.Logger
 }
 
 // NewEngine creates a new restore engine
@@ -27,6 +31,8 @@ func NewEngine(localStorage storage.StorageBackend, backupEngine backup.BackupEn
 		backupEngine: backupEngine,
 		config:       config,
 		logger:       logger,
+		notifier:     notifications.NewManager(config.Notifications, logger),
+		auditLogger:  audit.NewLogger(config.Audit),
 	}
 }
 
@@ -36,6 +42,8 @@ func (e *Engine) RestoreBackup(ctx context.Context, opts types.RestoreOptions) e
 
 	// Validate backup exists and is intact
 	if err := e.ValidateBackup(ctx, opts.BackupID); err != nil {
+		e.notifier.NotifyRestoreFailed(opts.BackupID, err)
+		e.auditLogger.Log(types.AuditActionRestore, types.AuditStatusFailed, map[string]interface{}{"backup_id": opts.BackupID}, err)
 		return fmt.Errorf("backup validation failed: %w", err)
 	}
 
@@ -45,6 +53,8 @@ func (e *Engine) RestoreBackup(ctx context.Context, opts types.RestoreOptions) e
 		var err error
 		preRestoreBackup, err = e.CreatePreRestoreBackup(ctx, opts.TargetPath)
 		if err != nil {
+			e.notifier.NotifyRestoreFailed(opts.BackupID, err)
+			e.auditLogger.Log(types.AuditActionRestore, types.AuditStatusFailed, map[string]interface{}{"backup_id": opts.BackupID, "stage": "pre_restore_backup"}, err)
 			return fmt.Errorf("failed to create pre-restore backup: %w", err)
 		}
 		e.logger.Info("Created pre-restore backup: %s", preRestoreBackup.ID)
@@ -53,6 +63,8 @@ func (e *Engine) RestoreBackup(ctx context.Context, opts types.RestoreOptions) e
 	// Retrieve backup data
 	data, metadata, err := e.localStorage.Retrieve(ctx, opts.BackupID)
 	if err != nil {
+		e.notifier.NotifyRestoreFailed(opts.BackupID, err)
+		e.auditLogger.Log(types.AuditActionRestore, types.AuditStatusFailed, map[string]interface{}{"backup_id": opts.BackupID, "stage": "retrieve"}, err)
 		return fmt.Errorf("failed to retrieve backup data: %w", err)
 	}
 
@@ -69,16 +81,24 @@ func (e *Engine) RestoreBackup(ctx context.Context, opts types.RestoreOptions) e
 			e.logger.Error("Restore failed, attempting rollback to pre-restore backup")
 			if rollbackErr := e.RollbackRestore(ctx, preRestoreBackup.ID); rollbackErr != nil {
 				e.logger.Error("Rollback failed: %v", rollbackErr)
+				e.notifier.NotifyRestoreFailed(opts.BackupID, fmt.Errorf("restore failed and rollback failed: %v", rollbackErr))
 				return fmt.Errorf("restore failed and rollback failed: restore error: %w, rollback error: %v", err, rollbackErr)
 			}
 			e.logger.Info("Successfully rolled back to pre-restore state")
 		}
+		e.notifier.NotifyRestoreFailed(opts.BackupID, err)
+		e.auditLogger.Log(types.AuditActionRestore, types.AuditStatusFailed, map[string]interface{}{"backup_id": opts.BackupID, "stage": "write"}, err)
 		return fmt.Errorf("failed to write restored state file: %w", err)
 	}
 
-	e.logger.Info("Successfully restored backup %s to %s (size: %d bytes)", 
+	e.logger.Info("Successfully restored backup %s to %s (size: %d bytes)",
 		opts.BackupID, opts.TargetPath, metadata.Size)
 
+	e.notifier.NotifyRestoreSuccess(opts.BackupID)
+	e.auditLogger.Log(types.AuditActionRestore, types.AuditStatusSuccess, map[string]interface{}{
+		"backup_id": opts.BackupID,
+		"target":    opts.TargetPath,
+	}, nil)
 	return nil
 }
 

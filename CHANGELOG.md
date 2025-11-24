@@ -5,10 +5,18 @@ All notable changes to tf-safe will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2025-11-24
 
 ### Added
-- Future enhancements will be listed here
+- **Backup Tagging & Search**: Categorize backups with key-value tags and search/filter them efficiently.
+- **State Diff/Comparison**: Compare any two state backups or current state to detect changes and drift.
+- **Drift Detection**: New `drift-detect` command to identify configuration drift in production.
+- **Webhook Notifications**: Real-time alerts via Slack, Email, and generic Webhooks for backup/restore events and drift detection.
+- **Audit Logging**: Comprehensive file-based audit logging for all critical operations with `audit-log` CLI viewer.
+- **New CLI Commands**: `diff`, `drift-detect`, `audit-log`.
+- **Enhanced CLI**: Added `--tags`, `--search`, `--latest` flags to existing commands.
+
+
 
 ## [1.0.0] - 2025-11-04
 

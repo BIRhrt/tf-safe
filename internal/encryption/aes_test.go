@@ -50,15 +50,15 @@ func TestAESProvider_KeyInfo(t *testing.T) {
 	}
 
 	keyInfo := provider.GetKeyInfo()
-	
+
 	if keyInfo.Type != "AES" {
 		t.Errorf("Expected key type 'AES', got '%s'", keyInfo.Type)
 	}
-	
+
 	if keyInfo.Algorithm != "AES-256-GCM" {
 		t.Errorf("Expected algorithm 'AES-256-GCM', got '%s'", keyInfo.Algorithm)
 	}
-	
+
 	if keyInfo.KeySize != 256 {
 		t.Errorf("Expected key size 256, got %d", keyInfo.KeySize)
 	}
@@ -77,7 +77,7 @@ func TestAESProvider_WithGeneratedKey(t *testing.T) {
 
 	// Test encryption/decryption
 	originalData := []byte("Test data with generated key")
-	
+
 	encrypted, err := provider.Encrypt(ctx, originalData)
 	if err != nil {
 		t.Fatalf("Failed to encrypt data: %v", err)

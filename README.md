@@ -16,6 +16,10 @@ A lightweight CLI tool that provides comprehensive Terraform state file protecti
 - **Cross-Platform**: Single binary for Linux, macOS, and Windows
 - **Retention Policies**: Configurable backup retention with automatic cleanup
 - **State Restoration**: Easy restoration of any previous state version
+- **Tagging & Search**: Categorize and filter backups with custom tags
+- **State Comparison**: Diff tool to compare state versions and detect drift
+- **Notifications**: Real-time alerts via Slack, Email, and Webhooks
+- **Audit Logging**: Comprehensive audit trail of all operations
 
 ## 📦 Installation
 
@@ -88,6 +92,18 @@ For detailed installation instructions, see [INSTALL.md](INSTALL.md).
    
    # Restore a specific backup
    tf-safe restore 2024-01-15T10:30:00Z
+   
+   # Restore latest backup with specific tag
+   tf-safe restore --latest --tags "env=prod"
+   ```
+
+5. **Compare states and check for drift**:
+   ```bash
+   # Compare two backups
+   tf-safe diff <backup-id-1> <backup-id-2>
+   
+   # Check for configuration drift
+   tf-safe drift-detect
    ```
 
 ## 📖 Usage
@@ -114,6 +130,7 @@ tf-safe backup [flags]
 
 Flags:
   --message string  Optional backup message/description
+  --tags string     Tags for the backup (e.g., "env=prod,deploy=v1")
   --force          Force backup even if no changes detected
 ```
 
@@ -127,6 +144,8 @@ Flags:
   --storage string  Filter by storage backend (local, s3, all) (default "all")
   --limit int      Limit number of results (default 20)
   --format string  Output format (table, json, yaml) (default "table")
+  --tags string    Filter by tags (e.g., "env=prod")
+  --search string  Search within state content
 ```
 
 #### `tf-safe restore`
@@ -139,6 +158,8 @@ Flags:
   --dry-run        Show what would be restored without making changes
   --force          Skip confirmation prompt
   --backup-current Create backup of current state before restore (default true)
+  --latest         Restore the latest backup matching filters
+  --tags string    Filter backups for --latest (e.g., "env=prod")
 ```
 
 #### Terraform Wrapper Commands
@@ -154,6 +175,38 @@ tf-safe plan [terraform-flags]
 # Terraform destroy with pre-operation backup
 tf-safe destroy [terraform-flags]
 ```
+
+#### `tf-safe diff`
+Compare two backups or a backup against current state.
+
+```bash
+tf-safe diff <backup-id-1> <backup-id-2> [flags]
+
+Flags:
+  --format string  Output format (text, json, yaml)
+  --compact        Show summary only
+```
+
+#### `tf-safe drift-detect`
+Check for configuration drift against the latest backup.
+
+```bash
+tf-safe drift-detect [flags]
+
+Flags:
+  --tags string    Compare against latest backup with tags
+  --format string  Output format (text, json, yaml)
+```
+
+#### `tf-safe audit-log`
+View audit logs.
+
+```bash
+tf-safe audit-log [flags]
+
+Flags:
+  --limit int      Number of entries to show
+  --action string  Filter by action type
 
 All Terraform flags and arguments are passed through unchanged.
 
@@ -198,6 +251,21 @@ retention:
 logging:
   level: "info"                 # Log level (debug, info, warn, error)
   format: "text"               # Log format (text, json)
+
+# Notification configuration
+notifications:
+  enabled: true
+  events: [backup_failed, drift_detected]
+  slack:
+    enabled: true
+    webhook_url: "https://hooks.slack.com/..."
+    channel: "#ops"
+
+# Audit configuration
+audit:
+  enabled: true
+  file: "tf-safe-audit.log"
+  retention: 90
 ```
 
 For complete configuration reference, see [Configuration Reference](#configuration-reference).
